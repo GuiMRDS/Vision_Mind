@@ -1,104 +1,201 @@
-# Python e Gemini: Orquestrando LLMs com LangChain
+# 🧠 VisionMind
 
-## 📌 Sobre o projeto
+Assistente multimodal desenvolvido com **Python, LangChain e Google Gemini**, capaz de analisar imagens, responder perguntas, explicar conceitos e utilizar ferramentas inteligentes através de um agente orquestrador.
 
-Este projeto utiliza o **LangChain** como framework principal para orquestrar uma solução integrada de análise e organização de imagens enriquecidas com anotações inteligentes. O LangChain foi escolhido por sua capacidade de conectar e gerenciar fluxos complexos que combinam IA multimodal e modelos de linguagem, permitindo um desenvolvimento mais modular e escalável.
+---
 
-O projeto expõe um **assistente via terminal**, orquestrado por um agente central que decide, a partir da pergunta do usuário, se deve responder diretamente ou acionar ferramentas (como análise de imagens).
+## 📸 Interface
 
-![Demonstração do projeto](img/amostra.gif)
+### Tela Principal
 
-## 🔨 Funcionalidades
+![Tela Principal](imagem/VisionMind)
 
-- Assistente conversacional via linha de comando
-- Análise de imagens com IA multimodal (ex: `"Faça uma análise da imagem exemplo_grafico.jpg"`)
-- Respostas diretas a perguntas gerais via cadeias simples (ex: `"Explique o que são desvios condicionais"`)
-- Orquestração de agente com múltiplas ferramentas (Agente como Ferramentas)
-- Suporte a múltiplos provedores de LLM: **Google Gemini** e **Maritaca AI**
+---
 
-## ✔️ Técnicas e tecnologias utilizadas
+## 🚀 Funcionalidades
 
-- Programação em **Python**
-- **API Gemini** (Google) e **API Maritaca**
-- Framework **LangChain**
-  - Cadeias Simples
-  - Agente Orquestrador
-  - Agente como Ferramentas
-- **Pillow** para manipulação de imagens
-- **python-dotenv** para gerenciamento de variáveis de ambiente
+- 🤖 Assistente conversacional
+- 🖼️ Análise de imagens com Gemini Vision
+- 🧠 Explicação de conceitos e conteúdos
+- 🔧 Agente Orquestrador com LangChain
+- 📤 Upload de imagens pela interface
+- 🌐 Aplicação Web responsiva
+- 📡 Comunicação Frontend ↔ Backend
 
-## 📂 Estrutura do projeto
+---
 
+## 🏗️ Arquitetura
+
+```text
+Usuário
+   ↓
+Frontend (HTML + JavaScript)
+   ↓
+Servidor Python
+   ↓
+Agente Orquestrador
+   ↓
+ ┌─────────────────────────┐
+ │ Ferramenta Explicadora  │
+ └─────────────────────────┘
+
+ ┌─────────────────────────┐
+ │ Ferramenta Analisadora  │
+ │ de Imagens              │
+ └─────────────────────────┘
+   ↓
+Google Gemini
 ```
-LLM-LangChain/
-├── agente/            # Lógica do agente orquestrador
-├── ferramentas/        # Ferramentas (tools) utilizadas pelo agente, ex: análise de imagem
-├── imagem/              # Módulos relacionados ao processamento de imagens
-├── langchain/           # Configurações e cadeias do LangChain
-├── testes/               # Testes do projeto
-├── img/                    # Imagens de exemplo e demonstração (ex: amostra.gif)
-├── main.py                 # Ponto de entrada — assistente via terminal
-├── my_helper.py             # Funções auxiliares
-├── my_keys.py                # Carregamento das API keys a partir do .env
-├── my_models.py               # Identificadores dos modelos utilizados (Gemini/Maritaca)
-├── requirements.txt            # Dependências do projeto
-└── .gitignore
+
+---
+
+## 🛠️ Tecnologias
+
+### Backend
+
+- Python
+- LangChain
+- Google Gemini
+- Pillow
+- HTTPServer
+
+### Frontend
+
+- HTML5
+- Tailwind CSS
+- JavaScript
+
+### IA
+
+- Gemini Flash
+- Gemini Vision
+
+---
+
+## ✨ Melhorias Implementadas
+
+### Interface
+
+- Header reorganizado
+- Hero otimizado
+- Redução de espaços vazios
+- Melhor aproveitamento vertical da tela
+- Layout inspirado em ChatGPT, Claude e Gemini
+- Campo de mensagem sempre acessível
+- Responsividade aprimorada
+
+### Backend
+
+- Correção do carregamento de imagens
+- Compatibilidade entre:
+
+```text
+imagem/
+site/imagem/
 ```
 
-## 🛠️ Como abrir e rodar o projeto
+- Uso de caminhos absolutos
+- Melhor tratamento de erros
+- Integração completa com o agente LangChain
 
-Após baixar o projeto, você pode abri-lo com o Visual Studio Code. Em seguida, é necessário preparar o ambiente.
+---
 
-### 1. Criar e ativar o ambiente virtual
+## 📂 Estrutura do Projeto
 
-**Windows:**
+```text
+VisionMind/
+│
+├── agente/
+├── ferramentas/
+├── imagem/
+├── site/
+│   ├── index.html
+│   ├── script.js
+│   ├── style.css
+│   └── imagem/
+│
+├── img/
+│   ├── interface_principal.png
+│   ├── interface_chat.png
+│   ├── interface_analise.png
+│
+├── main.py
+├── server.py
+├── my_helper.py
+├── my_keys.py
+├── my_models.py
+├── requirements.txt
+└── .env
+```
+
+---
+
+## ⚙️ Instalação
+
+### Clonar repositório
+
 ```bash
-python -m venv venv-gemini-3
-venv-gemini-3\Scripts\activate
+git clone https://github.com/SEU-USUARIO/VisionMind.git
+cd VisionMind
 ```
 
-**Mac/Linux:**
+### Criar ambiente virtual
+
+Windows:
+
 ```bash
-python3 -m venv venv-gemini-3
-source venv-gemini-3/bin/activate
+python -m venv .venv
+.venv\Scripts\activate
 ```
 
-### 2. Instalar as dependências
+Linux/Mac:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+### Instalar dependências
 
 ```bash
 pip install -r requirements.txt
 ```
 
-## 🔑 Gerar API_KEY e associar ao .env
+---
 
-Crie um arquivo `.env` na raiz do projeto com suas chaves de API:
+## 🔑 Configuração
+
+Crie um arquivo `.env`:
 
 ```env
-GEMINI_API_KEY="SUA_CHAVE_AQUI"
-MARITACA_API_KEY="SUA_CHAVE_AQUI"
+GEMINI_API_KEY="SUA_CHAVE"
+MARITACA_API_KEY="SUA_CHAVE"
 ```
 
-As chaves são carregadas automaticamente pelo `my_keys.py` através do `python-dotenv`.
+---
 
-> ⚠️ Nunca compartilhe suas chaves de API publicamente. Certifique-se de que o arquivo `.env` está listado no `.gitignore`.
+## ▶️ Executando
 
-## ▶️ Executando o projeto
+### Interface Web
+
+```bash
+python server.py
+```
+
+Acesse:
+
+```text
+http://localhost:8000
+```
+
+### Terminal
 
 ```bash
 python main.py
 ```
 
-Isso inicia o assistente em modo interativo no terminal:
-
-```
-=== Assistente IA ===
-Exemplos:
- - Explique o que são desvios condicionais
- - Faça uma análise da imagem exemplo_grafico.jpg
-
-Digite 'sair' para encerrar.
-```
+---
 
 ## 📄 Licença
 
-Este projeto está sob a licença MIT. Consulte o arquivo [LICENSE](LICENSE) para mais detalhes.
+Este projeto está sob a licença MIT.
