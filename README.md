@@ -69,36 +69,6 @@ Google Gemini
 
 ---
 
-## 📂 Estrutura do Projeto
-
-```text
-VisionMind/
-│
-├── agente/
-├── ferramentas/
-├── imagem/
-├── site/
-│   ├── index.html
-│   ├── script.js
-│   ├── style.css
-│   └── imagem/
-│
-├── img/
-│   ├── interface_principal.png
-│   ├── interface_chat.png
-│   ├── interface_analise.png
-│
-├── main.py
-├── server.py
-├── my_helper.py
-├── my_keys.py
-├── my_models.py
-├── requirements.txt
-└── .env
-```
-
----
-
 ## ⚙️ Instalação
 
 ### Clonar repositório
