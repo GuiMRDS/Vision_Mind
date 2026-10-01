@@ -53,7 +53,16 @@ class FerramentaExplicadora(BaseTool):
         input_variables=["tema"]
         )
 
-        cadeia = template_resposta | llm | StrOutputParser()
+        cadeia = (
+            template_resposta
+            | llm
+            | StrOutputParser()
+        )
 
-        resposta = cadeia.invoke({"tema": tema_parametro})
+        resposta = cadeia.invoke(
+            {"tema": tema_parametro}
+        )
+
         print("RESPOSTA:", resposta)
+
+        return resposta

@@ -1,0 +1,1411 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>VisionMind — GenLabs</title>
+
+    <!-- Tailwind CDN (same as design-system) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter font (same as design-system) -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <script>
+      tailwind.config = {
+        theme: { extend: {} },
+        plugins: [],
+      };
+    </script>
+
+    <style>
+      /* ── Base ── */
+      *,
+      ::before,
+      ::after {
+        box-sizing: border-box;
+      }
+      body {
+        font-family: "Inter", sans-serif;
+      }
+
+      /* ── Glass effects (from design-system) ── */
+      .glass-panel {
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+      }
+      .glass-card {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+      }
+
+      /* ── Border gradient helper (from design-system) ── */
+      [style*="--border-gradient"]::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        padding: 1px;
+        border-radius: var(--border-radius-before, inherit);
+        -webkit-mask:
+          linear-gradient(#fff 0 0) content-box,
+          linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        background: var(--border-gradient);
+        pointer-events: none;
+      }
+
+      /* ── Curve separator (from design-system) ── */
+      .curve-separator {
+        background-image: url("data:image/svg+xml,%3Csvg width='20' height='60' viewBox='0 0 20 60' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M18 1C18 1 1 15 1 30C1 45 18 59 18 59' stroke='%23CBD5E1' stroke-width='0.5' stroke-linecap='round'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: center;
+        width: 20px;
+        height: 40px;
+      }
+
+      /* ── Ping animation (from design-system) ── */
+      @keyframes ping {
+        75%,
+        100% {
+          transform: scale(2);
+          opacity: 0;
+        }
+      }
+      .animate-ping {
+        animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
+      }
+
+      /* ── Carousel / scroll animation (from design-system) ── */
+      @keyframes vertical-scroll {
+        0%,
+        25% {
+          transform: translateY(0);
+        }
+        33.33%,
+        58.33% {
+          transform: translateY(-33.33%);
+        }
+        66.66%,
+        91.66% {
+          transform: translateY(-66.66%);
+        }
+        100% {
+          transform: translateY(0);
+        }
+      }
+      .carousel-track {
+        animation: vertical-scroll 12s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+      }
+
+      /* ── Fade-in for new messages ── */
+      @keyframes fadeSlideIn {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .msg-animate {
+        animation: fadeSlideIn 0.35s cubic-bezier(0.4, 0, 0.2, 1) both;
+      }
+
+      /* ── Typing dots ── */
+      @keyframes typingDot {
+        0%,
+        80%,
+        100% {
+          transform: translateY(0);
+          opacity: 0.4;
+        }
+        40% {
+          transform: translateY(-6px);
+          opacity: 1;
+        }
+      }
+      .typing-dot {
+        animation: typingDot 1.2s ease-in-out infinite;
+      }
+      .typing-dot:nth-child(2) {
+        animation-delay: 0.15s;
+      }
+      .typing-dot:nth-child(3) {
+        animation-delay: 0.3s;
+      }
+
+      /* ── Scrollbar ── */
+      #chat-messages::-webkit-scrollbar {
+        width: 4px;
+      }
+      #chat-messages::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      #chat-messages::-webkit-scrollbar-thumb {
+        background: #d4d4d8;
+        border-radius: 4px;
+      }
+
+      /* ── Drop zone highlight ── */
+      .drop-active {
+        border-color: #fb923c !important;
+        background-color: rgba(251, 146, 60, 0.06) !important;
+      }
+
+      /* ── Markdown-like formatting for AI responses ── */
+      .ai-content strong {
+        font-weight: 600;
+      }
+      .ai-content em {
+        font-style: italic;
+      }
+      .ai-content code {
+        font-family: ui-monospace, monospace;
+        font-size: 0.8em;
+        background: rgba(0, 0, 0, 0.06);
+        border-radius: 3px;
+        padding: 0 4px;
+      }
+      .ai-content ul {
+        list-style: disc;
+        padding-left: 1.25rem;
+      }
+      .ai-content ol {
+        list-style: decimal;
+        padding-left: 1.25rem;
+      }
+      .ai-content li {
+        margin-bottom: 0.25rem;
+      }
+      .ai-content h3,
+      .ai-content h4 {
+        font-weight: 600;
+        margin-top: 0.75rem;
+        margin-bottom: 0.25rem;
+      }
+      .ai-content p {
+        margin-bottom: 0.5rem;
+      }
+    </style>
+  </head>
+
+  <body
+    class="min-h-screen bg-zinc-500 bg-cover bg-center flex items-center justify-center px-0 py-0 xl:p-8 selection:bg-slate-900 selection:text-white text-slate-800"
+    style="
+      background-image: radial-gradient(
+        ellipse at 20% 50%,
+        #71717a 0%,
+        #3f3f46 50%,
+        #27272a 100%
+      );
+    "
+  >
+    <!-- ════════════════════════════════════════════════
+     TOP NAV  (from design-system nav pattern)
+════════════════════════════════════════════════ -->
+    <nav
+      class="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-sm border-b border-zinc-200 px-6 py-3"
+    >
+      <div
+        class="max-w-[1300px] mx-auto flex items-center justify-between gap-4"
+      >
+        <!-- Logo -->
+        <div class="flex items-center gap-2 text-zinc-900">
+          <div
+            class="flex text-white bg-gradient-to-b from-black/60 to-black/20 w-8 h-8 rounded-full items-center justify-center relative"
+            style="
+              --border-gradient: linear-gradient(
+                180deg,
+                rgba(0, 0, 0, 0.1),
+                rgba(0, 0, 0, 0),
+                rgba(0, 0, 0, 0.1)
+              );
+              --border-radius-before: 9999px;
+            "
+          >
+            <!-- Eye / Vision icon -->
+            <svg
+              fill="none"
+              height="16"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1.5"
+              viewBox="0 0 24 24"
+              width="16"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"
+                fill="white"
+                fill-opacity=".5"
+              />
+              <circle cx="12" cy="12" fill="white" r="3" />
+            </svg>
+          </div>
+          <span class="text-lg font-medium tracking-tight"
+            >Vision<span class="text-zinc-400">Mind</span></span
+          >
+        </div>
+
+        <!-- Status pill -->
+        <div
+          class="hidden md:flex items-center gap-2 bg-white/50 border border-white/60 rounded-full px-4 py-1.5 shadow-sm backdrop-blur-sm"
+        >
+          <span class="relative flex h-2 w-2">
+            <span
+              id="status-ping"
+              class="animate-ping absolute inline-flex h-full w-full rounded-full bg-zinc-400 opacity-75"
+            ></span>
+            <span
+              id="status-dot"
+              class="relative inline-flex rounded-full h-2 w-2 bg-zinc-400"
+            ></span>
+          </span>
+          <span
+            id="status-label"
+            class="text-[10px] uppercase font-semibold text-zinc-500 tracking-wide"
+            >Conectando…</span
+          >
+        </div>
+
+        <!-- CTA -->
+        <div class="flex items-center gap-3">
+          <span class="text-xs font-medium text-zinc-500 hidden sm:block"
+            >Gemini Flash · ReAct Agent</span
+          >
+          <button
+            onclick="limparChat()"
+            class="flex items-center gap-2 text-xs font-medium text-zinc-600 bg-gradient-to-b from-black/10 via-black/20 to-black/10 rounded-full px-4 py-2 hover:bg-zinc-50 transition-all"
+            style="
+              box-shadow:
+                0 18px 35px rgba(31, 41, 55, 0.15),
+                0 0 0 1px rgba(209, 213, 219, 0.3);
+              position: relative;
+              --border-gradient: linear-gradient(
+                180deg,
+                rgba(255, 255, 255, 0.8),
+                rgba(0, 0, 0, 0.4),
+                rgba(255, 255, 255, 0.8)
+              );
+              --border-radius-before: 9999px;
+            "
+          >
+            <svg
+              fill="none"
+              height="14"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1.5"
+              viewBox="0 0 24 24"
+              width="14"
+            >
+              <polyline points="1 4 1 10 7 10" />
+              <path d="M3.51 15a9 9 0 1 0 .49-3.5" />
+            </svg>
+            <span class="text-black/60">Nova conversa</span>
+          </button>
+        </div>
+      </div>
+    </nav>
+
+    <!-- ════════════════════════════════════════════════
+     MAIN FRAME  (glass-panel from design-system)
+════════════════════════════════════════════════ -->
+    <main
+      class="glass-panel overflow-hidden flex flex-col xl:max-w-[1300px] z-10 xl:border-white/50 border-none xl:border xl:rounded-[2.5rem] xl:shadow-2xl min-h-screen xl:min-h-[700px] w-full rounded-none relative shadow-none mt-14"
+      style="min-height: calc(100vh - 3.5rem)"
+    >
+      <!-- Vertical grid lines (from design-system) -->
+      <div
+        class="absolute inset-0 flex justify-between pointer-events-none z-0 px-6 md:px-10 xl:px-12 w-full h-full"
+      >
+        <div class="h-full w-[1px] bg-zinc-950/5"></div>
+        <div class="h-full w-[1px] bg-zinc-950/5 hidden md:block"></div>
+        <div class="h-full w-[1px] bg-zinc-950/5 hidden lg:block"></div>
+        <div class="h-full w-[1px] bg-zinc-950/5 hidden xl:block"></div>
+        <div class="h-full w-[1px] bg-zinc-950/5"></div>
+      </div>
+
+      <!-- ── Inner content ── -->
+      <div
+        class="relative z-10 flex flex-col h-full"
+        style="height: calc(100vh - 3.5rem)"
+      >
+        <!-- ── HERO HEADER ── -->
+        <section class="px-6 md:px-10 xl:px-12 pt-8 pb-6 flex-shrink-0">
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16">
+            <!-- Left: title -->
+            <div class="lg:col-span-7 flex flex-col justify-center">
+              <!-- Social proof pill -->
+              <div
+                class="inline-flex bg-white/60 w-max rounded-full mb-5 px-4 py-1.5 shadow-sm backdrop-blur-sm items-center gap-2 border border-white/40"
+              >
+                <span class="relative flex h-2 w-2">
+                  <span
+                    class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"
+                  ></span>
+                  <span
+                    class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"
+                  ></span>
+                </span>
+                <span class="text-xs font-medium text-zinc-600 tracking-wide">
+                  <span class="text-zinc-900">IA Multimodal</span> · Análise de
+                  Imagens + Chat
+                </span>
+              </div>
+
+              <!-- Headline -->
+              <h1
+                class="leading-tight text-4xl md:text-5xl lg:text-[3.5rem] font-medium text-zinc-900 tracking-tighter mb-4"
+              >
+                Vision<span
+                  class="text-transparent bg-clip-text bg-gradient-to-r from-zinc-400 to-zinc-200 font-light"
+                  >Mind</span
+                >
+              </h1>
+              <p
+                class="text-sm text-zinc-500 font-medium max-w-md leading-relaxed tracking-wide border-l-2 border-zinc-200 pl-4"
+              >
+                Assistente inteligente com visão computacional. Envie imagens
+                JPG para análise detalhada ou faça perguntas sobre qualquer
+                tema.
+              </p>
+            </div>
+
+            <!-- Right: capability card -->
+            <div class="lg:col-span-5 relative group hidden lg:flex">
+              <div
+                class="w-full rounded-2xl overflow-hidden shadow-xl shadow-zinc-900/20 border border-white/20 relative"
+                style="
+                  min-height: 200px;
+                  background: linear-gradient(
+                    135deg,
+                    #27272a 0%,
+                    #3f3f46 60%,
+                    #52525b 100%
+                  );
+                "
+              >
+                <!-- Demo image -->
+                <img
+                  src="imagem/exemplo_grafico.jpg"
+                  alt="Exemplo de análise"
+                  class="w-full h-full object-cover absolute inset-0 opacity-50 group-hover:scale-105 transition-transform duration-700 ease-in-out"
+                />
+                <div
+                  class="absolute inset-0 bg-gradient-to-t from-zinc-900/90 via-zinc-900/30 to-zinc-900/10"
+                ></div>
+                <!-- Overlay content -->
+                <div class="absolute inset-0 p-6 flex flex-col justify-between">
+                  <div
+                    class="flex items-center gap-2 bg-white/10 rounded-full px-3 py-1.5 w-fit backdrop-blur-sm border border-white/10"
+                  >
+                    <span class="relative flex h-2 w-2">
+                      <span
+                        class="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"
+                      ></span>
+                      <span
+                        class="relative inline-flex rounded-full h-2 w-2 bg-orange-500"
+                      ></span>
+                    </span>
+                    <span
+                      class="text-[10px] uppercase font-semibold text-white tracking-wide"
+                      >Análise Ativa</span
+                    >
+                  </div>
+                  <!-- Carousel of features -->
+                  <div class="overflow-hidden h-[72px]">
+                    <div
+                      class="carousel-track flex flex-col"
+                      style="height: 216px"
+                    >
+                      <div class="h-[72px] flex flex-col justify-center">
+                        <span
+                          class="text-white text-xs font-semibold tracking-wide mb-0.5"
+                          >🖼️ Análise de Imagens JPG</span
+                        >
+                        <span class="text-white/60 text-[10px] leading-relaxed"
+                          >Envie qualquer imagem e receba uma análise detalhada
+                          com rótulos e descrição.</span
+                        >
+                      </div>
+                      <div class="h-[72px] flex flex-col justify-center">
+                        <span
+                          class="text-white text-xs font-semibold tracking-wide mb-0.5"
+                          >💬 Chat Inteligente</span
+                        >
+                        <span class="text-white/60 text-[10px] leading-relaxed"
+                          >Explique conceitos, tire dúvidas e explore tópicos
+                          com profundidade.</span
+                        >
+                      </div>
+                      <div class="h-[72px] flex flex-col justify-center">
+                        <span
+                          class="text-white text-xs font-semibold tracking-wide mb-0.5"
+                          >⚡ Gemini Flash · ReAct</span
+                        >
+                        <span class="text-white/60 text-[10px] leading-relaxed"
+                          >Agente orquestrador LangChain com ferramentas
+                          especializadas em análise visual.</span
+                        >
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Stats row (from design-system footer stats) -->
+          <div class="flex flex-wrap gap-4 md:gap-8 mt-6 items-center">
+            <div class="flex items-center group cursor-default">
+              <div class="px-1 text-center">
+                <p
+                  class="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest mb-1 group-hover:text-zinc-600 transition-colors"
+                >
+                  Ferramentas
+                </p>
+                <p class="text-sm text-zinc-900 font-medium">2</p>
+              </div>
+              <div class="curve-separator opacity-60 ml-4"></div>
+            </div>
+            <div class="flex items-center group cursor-default">
+              <div class="px-1 text-center">
+                <p
+                  class="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest mb-1 group-hover:text-zinc-600 transition-colors"
+                >
+                  Modelo
+                </p>
+                <p class="text-sm text-zinc-900 font-medium">Gemini Flash</p>
+              </div>
+              <div class="curve-separator opacity-60 ml-4"></div>
+            </div>
+            <div class="flex items-center group cursor-default">
+              <div class="px-1 text-center">
+                <p
+                  class="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest mb-1 group-hover:text-zinc-600 transition-colors"
+                >
+                  Formatos
+                </p>
+                <p class="text-sm text-zinc-900 font-medium">JPG / JPEG</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Divider -->
+        <div
+          class="flex-shrink-0 h-px bg-zinc-950/5 mx-6 md:mx-10 xl:mx-12"
+        ></div>
+
+        <!-- ══════════════════════════════════════════
+         MAIN CHAT AREA
+    ══════════════════════════════════════════ -->
+        <div class="flex flex-1 overflow-hidden gap-0 min-h-0">
+          <!-- ── SIDEBAR (image upload / example) ── -->
+          <aside
+            class="hidden md:flex flex-col flex-shrink-0 w-64 xl:w-72 border-r border-zinc-950/5 px-5 py-6 gap-5 overflow-y-auto"
+          >
+            <!-- Upload zone -->
+            <div>
+              <h3
+                class="text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-3"
+              >
+                Imagem para Análise
+              </h3>
+
+              <!-- Drop zone -->
+              <div
+                id="drop-zone"
+                onclick="document.getElementById('file-input').click()"
+                ondragover="
+                  event.preventDefault();
+                  this.classList.add('drop-active');
+                "
+                ondragleave="this.classList.remove('drop-active')"
+                ondrop="handleDrop(event)"
+                class="border-2 border-dashed border-zinc-200 rounded-xl p-5 text-center cursor-pointer hover:border-zinc-300 hover:bg-zinc-50 transition-all group relative"
+              >
+                <input
+                  id="file-input"
+                  type="file"
+                  accept=".jpg,.jpeg"
+                  class="hidden"
+                  onchange="handleFileSelect(event)"
+                />
+                <!-- Preview (hidden until image selected) -->
+                <div id="preview-container" class="hidden mb-3">
+                  <img
+                    id="preview-img"
+                    src=""
+                    alt="Preview"
+                    class="w-full rounded-lg object-cover shadow-sm border border-zinc-200 max-h-40"
+                  />
+                  <button
+                    onclick="
+                      event.stopPropagation();
+                      limparImagem();
+                    "
+                    class="absolute top-2 right-2 w-6 h-6 bg-zinc-900 text-white rounded-full flex items-center justify-center opacity-80 hover:opacity-100 transition-opacity text-xs"
+                  >
+                    ✕
+                  </button>
+                </div>
+                <!-- Empty state -->
+                <div id="drop-placeholder">
+                  <div
+                    class="w-10 h-10 mx-auto mb-3 rounded-full bg-zinc-100 flex items-center justify-center group-hover:bg-zinc-200 transition-colors"
+                  >
+                    <svg
+                      fill="none"
+                      height="20"
+                      stroke="currentColor"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="1.5"
+                      viewBox="0 0 24 24"
+                      width="20"
+                      class="text-zinc-400"
+                    >
+                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                      <circle cx="8.5" cy="8.5" r="1.5" />
+                      <polyline points="21 15 16 10 5 21" />
+                    </svg>
+                  </div>
+                  <p class="text-xs font-medium text-zinc-500">
+                    Arraste ou clique para<br />selecionar imagem JPG
+                  </p>
+                  <p class="text-[10px] text-zinc-400 mt-1">Máx. 10 MB</p>
+                </div>
+              </div>
+
+              <!-- Image name pill -->
+              <div
+                id="image-name-pill"
+                class="hidden mt-2 px-3 py-1.5 bg-zinc-100 rounded-lg flex items-center gap-2"
+              >
+                <svg
+                  fill="none"
+                  height="12"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="1.5"
+                  viewBox="0 0 24 24"
+                  width="12"
+                  class="text-zinc-500 flex-shrink-0"
+                >
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                  <circle cx="8.5" cy="8.5" r="1.5" />
+                  <polyline points="21 15 16 10 5 21" />
+                </svg>
+                <span
+                  id="image-name-text"
+                  class="text-[11px] text-zinc-600 font-medium truncate flex-1"
+                ></span>
+              </div>
+            </div>
+
+            <!-- Quick prompts -->
+            <div>
+              <h3
+                class="text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-3"
+              >
+                Ações Rápidas
+              </h3>
+              <div class="flex flex-col gap-2">
+                <button
+                  onclick="usarExemplo()"
+                  class="group flex items-center gap-3 text-left text-xs font-medium text-zinc-600 bg-white hover:bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-3 transition-all hover:shadow-sm hover:border-zinc-300"
+                >
+                  <div
+                    class="w-7 h-7 rounded-lg bg-zinc-100 group-hover:bg-zinc-200 flex items-center justify-center transition-colors flex-shrink-0"
+                  >
+                    <svg
+                      fill="none"
+                      height="14"
+                      stroke="currentColor"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="1.5"
+                      viewBox="0 0 24 24"
+                      width="14"
+                      class="text-zinc-500"
+                    >
+                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                      <circle cx="8.5" cy="8.5" r="1.5" />
+                      <polyline points="21 15 16 10 5 21" />
+                    </svg>
+                  </div>
+                  Usar imagem exemplo
+                </button>
+
+                <button
+                  onclick="enviarPrompt('Explique o que são redes neurais')"
+                  class="group flex items-center gap-3 text-left text-xs font-medium text-zinc-600 bg-white hover:bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-3 transition-all hover:shadow-sm hover:border-zinc-300"
+                >
+                  <div
+                    class="w-7 h-7 rounded-lg bg-zinc-100 group-hover:bg-zinc-200 flex items-center justify-center transition-colors flex-shrink-0"
+                  >
+                    <svg
+                      fill="none"
+                      height="14"
+                      stroke="currentColor"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="1.5"
+                      viewBox="0 0 24 24"
+                      width="14"
+                      class="text-zinc-500"
+                    >
+                      <circle cx="12" cy="12" r="10" />
+                      <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                      <line x1="12" y1="17" x2="12.01" y2="17" />
+                    </svg>
+                  </div>
+                  O que são redes neurais?
+                </button>
+
+                <button
+                  onclick="
+                    enviarPrompt('Explique machine learning de forma simples')
+                  "
+                  class="group flex items-center gap-3 text-left text-xs font-medium text-zinc-600 bg-white hover:bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-3 transition-all hover:shadow-sm hover:border-zinc-300"
+                >
+                  <div
+                    class="w-7 h-7 rounded-lg bg-zinc-100 group-hover:bg-zinc-200 flex items-center justify-center transition-colors flex-shrink-0"
+                  >
+                    <svg
+                      fill="none"
+                      height="14"
+                      stroke="currentColor"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="1.5"
+                      viewBox="0 0 24 24"
+                      width="14"
+                      class="text-zinc-500"
+                    >
+                      <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                      <path d="M2 17l10 5 10-5" />
+                      <path d="M2 12l10 5 10-5" />
+                    </svg>
+                  </div>
+                  O que é machine learning?
+                </button>
+
+                <button
+                  onclick="
+                    enviarPrompt('Explique o que são desvios condicionais')
+                  "
+                  class="group flex items-center gap-3 text-left text-xs font-medium text-zinc-600 bg-white hover:bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-3 transition-all hover:shadow-sm hover:border-zinc-300"
+                >
+                  <div
+                    class="w-7 h-7 rounded-lg bg-zinc-100 group-hover:bg-zinc-200 flex items-center justify-center transition-colors flex-shrink-0"
+                  >
+                    <svg
+                      fill="none"
+                      height="14"
+                      stroke="currentColor"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="1.5"
+                      viewBox="0 0 24 24"
+                      width="14"
+                      class="text-zinc-500"
+                    >
+                      <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                    </svg>
+                  </div>
+                  Desvios condicionais
+                </button>
+              </div>
+            </div>
+
+            <!-- Spacer + model info -->
+            <div class="mt-auto pt-4 border-t border-zinc-950/5">
+              <div class="flex flex-col gap-2">
+                <div class="flex items-center justify-between">
+                  <span
+                    class="text-[10px] uppercase font-semibold text-zinc-400 tracking-widest"
+                    >Modelo</span
+                  >
+                  <span class="text-xs font-mono text-zinc-600"
+                    >gemini-2.5-flash</span
+                  >
+                </div>
+                <div class="flex items-center justify-between">
+                  <span
+                    class="text-[10px] uppercase font-semibold text-zinc-400 tracking-widest"
+                    >Agente</span
+                  >
+                  <span class="text-xs font-mono text-zinc-600">ReAct</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span
+                    class="text-[10px] uppercase font-semibold text-zinc-400 tracking-widest"
+                    >Framework</span
+                  >
+                  <span class="text-xs font-mono text-zinc-600">LangChain</span>
+                </div>
+              </div>
+            </div>
+          </aside>
+
+          <!-- ── CHAT COLUMN ── -->
+          <div class="flex flex-col flex-1 min-w-0 min-h-0">
+            <!-- Messages area -->
+            <div
+              id="chat-messages"
+              class="flex-1 overflow-y-auto px-6 md:px-8 py-6 flex flex-col gap-4 min-h-0"
+            >
+              <!-- Welcome message -->
+              <div id="welcome-card" class="msg-animate">
+                <div class="group flex items-start gap-3">
+                  <!-- AI avatar -->
+                  <div
+                    class="w-8 h-8 rounded-full bg-gradient-to-b from-black/60 to-black/20 flex items-center justify-center flex-shrink-0 shadow-sm relative"
+                    style="
+                      --border-gradient: linear-gradient(
+                        180deg,
+                        rgba(0, 0, 0, 0.1),
+                        rgba(0, 0, 0, 0),
+                        rgba(0, 0, 0, 0.1)
+                      );
+                      --border-radius-before: 9999px;
+                    "
+                  >
+                    <svg
+                      fill="none"
+                      height="14"
+                      stroke="white"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="1.5"
+                      viewBox="0 0 24 24"
+                      width="14"
+                    >
+                      <path
+                        d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"
+                        fill="white"
+                        fill-opacity=".4"
+                      />
+                      <circle cx="12" cy="12" fill="white" r="3" />
+                    </svg>
+                  </div>
+                  <!-- Bubble -->
+                  <div class="max-w-2xl">
+                    <div class="flex items-center gap-2 mb-1.5">
+                      <span class="text-xs font-semibold text-zinc-900"
+                        >VisionMind</span
+                      >
+                      <span class="text-[10px] text-zinc-400">agora</span>
+                    </div>
+                    <div
+                      class="bg-white border border-zinc-200 rounded-2xl rounded-tl-sm px-5 py-4 shadow-sm"
+                    >
+                      <p
+                        class="text-sm text-zinc-700 leading-relaxed font-medium mb-3"
+                      >
+                        Olá! Sou o <strong>VisionMind</strong>, seu assistente
+                        inteligente com visão computacional. 👁️
+                      </p>
+                      <p class="text-sm text-zinc-500 leading-relaxed mb-4">
+                        Posso analisar imagens JPG em detalhes e responder suas
+                        dúvidas sobre qualquer tema.
+                      </p>
+                      <!-- Quick start chips -->
+                      <div class="flex flex-wrap gap-2">
+                        <button
+                          onclick="usarExemplo()"
+                          class="text-[11px] font-medium text-zinc-600 bg-zinc-50 border border-zinc-200 rounded-full px-3 py-1 hover:bg-zinc-100 transition-colors"
+                        >
+                          🖼️ Analisar exemplo
+                        </button>
+                        <button
+                          onclick="
+                            enviarPrompt('Explique o que são redes neurais')
+                          "
+                          class="text-[11px] font-medium text-zinc-600 bg-zinc-50 border border-zinc-200 rounded-full px-3 py-1 hover:bg-zinc-100 transition-colors"
+                        >
+                          💬 Redes neurais
+                        </button>
+                        <button
+                          onclick="enviarPrompt('O que é visão computacional?')"
+                          class="text-[11px] font-medium text-zinc-600 bg-zinc-50 border border-zinc-200 rounded-full px-3 py-1 hover:bg-zinc-100 transition-colors"
+                        >
+                          🔍 Visão computacional
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ── INPUT BAR ── -->
+            <div
+              class="flex-shrink-0 border-t border-zinc-950/5 px-6 md:px-8 py-4"
+            >
+              <!-- Mobile image controls (visible on mobile only) -->
+              <div class="flex md:hidden items-center gap-2 mb-3">
+                <button
+                  onclick="document.getElementById('file-input-mobile').click()"
+                  class="flex items-center gap-2 text-xs font-medium text-zinc-600 bg-white border border-zinc-200 rounded-full px-3 py-1.5 hover:bg-zinc-50 transition-all"
+                >
+                  <input
+                    id="file-input-mobile"
+                    type="file"
+                    accept=".jpg,.jpeg"
+                    class="hidden"
+                    onchange="handleFileSelect(event)"
+                  />
+                  <svg
+                    fill="none"
+                    height="12"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="1.5"
+                    viewBox="0 0 24 24"
+                    width="12"
+                  >
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                    <circle cx="8.5" cy="8.5" r="1.5" />
+                    <polyline points="21 15 16 10 5 21" />
+                  </svg>
+                  Imagem
+                </button>
+                <button
+                  onclick="usarExemplo()"
+                  class="flex items-center gap-2 text-xs font-medium text-zinc-600 bg-white border border-zinc-200 rounded-full px-3 py-1.5 hover:bg-zinc-50 transition-all"
+                >
+                  🖼️ Exemplo
+                </button>
+                <div id="mobile-image-badge" class="hidden">
+                  <span
+                    id="mobile-image-name"
+                    class="text-[11px] font-medium text-orange-600 bg-orange-50 border border-orange-200 rounded-full px-3 py-1"
+                  ></span>
+                </div>
+              </div>
+
+              <!-- Input row -->
+              <div class="relative flex items-end gap-3">
+                <div class="flex-1 relative">
+                  <textarea
+                    id="message-input"
+                    placeholder="Escreva sua mensagem ou peça uma análise de imagem…"
+                    rows="1"
+                    onkeydown="handleKeyDown(event)"
+                    oninput="autoResize(this)"
+                    class="w-full bg-zinc-50 border border-zinc-200 rounded-2xl pl-5 pr-5 py-3.5 shadow-sm text-sm text-zinc-700 placeholder:text-zinc-400 outline-none focus:border-zinc-400 focus:shadow-md transition-all resize-none leading-relaxed"
+                    style="max-height: 140px; overflow-y: auto"
+                  ></textarea>
+                </div>
+
+                <!-- Send button (primary — orange gradient from design-system) -->
+                <button
+                  id="send-btn"
+                  onclick="enviarMensagem()"
+                  class="group flex-shrink-0 flex items-center justify-center w-11 h-11 rounded-full transition-all hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-zinc-900/20 disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none"
+                  style="
+                    background: radial-gradient(
+                      circle at 10% 0%,
+                      #fed7aa 0%,
+                      #fb923c 100%
+                    );
+                    box-shadow:
+                      0 15px 25px -10px rgba(248, 113, 22, 0.7),
+                      inset 0 4px 8px rgba(253, 230, 138, 0.9),
+                      inset 0 -4px 8px rgba(249, 115, 22, 0.9);
+                  "
+                >
+                  <svg
+                    class="group-hover:translate-x-0.5 transition-transform"
+                    fill="none"
+                    height="18"
+                    stroke="#1c1917"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    viewBox="0 0 24 24"
+                    width="18"
+                  >
+                    <line x1="22" y1="2" x2="11" y2="13" />
+                    <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                  </svg>
+                </button>
+              </div>
+
+              <!-- Footer hint -->
+              <div class="flex items-center justify-between mt-2.5">
+                <p class="text-[10px] text-zinc-400">
+                  <kbd
+                    class="font-mono bg-zinc-100 border border-zinc-200 rounded px-1"
+                    >Enter</kbd
+                  >
+                  envia ·
+                  <kbd
+                    class="font-mono bg-zinc-100 border border-zinc-200 rounded px-1"
+                    >Shift+Enter</kbd
+                  >
+                  nova linha
+                </p>
+                <div
+                  id="timing-display"
+                  class="hidden text-[10px] text-zinc-400 font-mono"
+                ></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- ════════════════════════════════════════════════
+     JAVASCRIPT
+════════════════════════════════════════════════ -->
+    <script>
+      // ── State ──────────────────────────────────────────
+      let imagemAtual = null; // { nome, base64, url }
+      let carregando = false;
+
+      // ── Init ───────────────────────────────────────────
+      document.addEventListener("DOMContentLoaded", () => {
+        verificarStatus();
+        setInterval(verificarStatus, 30000);
+        document.getElementById("message-input").focus();
+      });
+
+      // ── Status check ───────────────────────────────────
+      async function verificarStatus() {
+        const dot = document.getElementById("status-dot");
+        const ping = document.getElementById("status-ping");
+        const label = document.getElementById("status-label");
+        try {
+          const r = await fetch("/api/status");
+          if (!r.ok) throw new Error();
+          const d = await r.json();
+          const ok = d.agente_conectado;
+          dot.className = `relative inline-flex rounded-full h-2 w-2 ${ok ? "bg-emerald-500" : "bg-yellow-500"}`;
+          ping.className = `animate-ping absolute inline-flex h-full w-full rounded-full ${ok ? "bg-emerald-400" : "bg-yellow-400"} opacity-75`;
+          label.textContent = ok ? "Agente Online" : "Agente Desconectado";
+          label.className = `text-[10px] uppercase font-semibold ${ok ? "text-emerald-600" : "text-yellow-600"} tracking-wide`;
+        } catch {
+          dot.className =
+            "relative inline-flex rounded-full h-2 w-2 bg-zinc-400";
+          ping.className =
+            "animate-ping absolute inline-flex h-full w-full rounded-full bg-zinc-400 opacity-75";
+          label.textContent = "Servidor Offline";
+          label.className =
+            "text-[10px] uppercase font-semibold text-zinc-500 tracking-wide";
+        }
+      }
+
+      // ── File handling ───────────────────────────────────
+      function handleDrop(e) {
+        e.preventDefault();
+        document.getElementById("drop-zone").classList.remove("drop-active");
+        const f = e.dataTransfer.files[0];
+        if (f) processarArquivo(f);
+      }
+
+      function handleFileSelect(e) {
+        const f = e.target.files[0];
+        if (f) processarArquivo(f);
+        e.target.value = "";
+      }
+
+      function processarArquivo(file) {
+        if (!file.type.match(/image\/(jpeg)/)) {
+          mostrarErro("Apenas arquivos JPG/JPEG são suportados.");
+          return;
+        }
+        if (file.size > 10 * 1024 * 1024) {
+          mostrarErro("Arquivo muito grande. Limite: 10 MB.");
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          const base64 = ev.target.result;
+          const nome = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+
+          imagemAtual = { nome, base64, url: base64 };
+
+          // Show preview
+          document.getElementById("preview-img").src = base64;
+          document
+            .getElementById("preview-container")
+            .classList.remove("hidden");
+          document.getElementById("drop-placeholder").classList.add("hidden");
+          document.getElementById("image-name-pill").classList.remove("hidden");
+          document.getElementById("image-name-pill").classList.add("flex");
+          document.getElementById("image-name-text").textContent = nome;
+          document
+            .getElementById("mobile-image-badge")
+            .classList.remove("hidden");
+          document.getElementById("mobile-image-name").textContent = nome;
+
+          // Auto-fill input suggestion
+          const inp = document.getElementById("message-input");
+          if (!inp.value.trim()) {
+            inp.value = "Faça uma análise desta imagem";
+            autoResize(inp);
+          }
+          inp.focus();
+        };
+        reader.readAsDataURL(file);
+      }
+
+      function limparImagem() {
+        imagemAtual = null;
+        document.getElementById("preview-container").classList.add("hidden");
+        document.getElementById("drop-placeholder").classList.remove("hidden");
+        document.getElementById("image-name-pill").classList.add("hidden");
+        document.getElementById("mobile-image-badge").classList.add("hidden");
+      }
+
+      async function usarExemplo() {
+        try {
+          // Fetch example image
+          const r = await fetch("/imagem/exemplo_grafico.jpg");
+          const blob = await r.blob();
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            const base64 = ev.target.result;
+            imagemAtual = { nome: "exemplo_grafico.jpg", base64, url: base64 };
+
+            document.getElementById("preview-img").src = base64;
+            document
+              .getElementById("preview-container")
+              .classList.remove("hidden");
+            document.getElementById("drop-placeholder").classList.add("hidden");
+            document
+              .getElementById("image-name-pill")
+              .classList.remove("hidden");
+            document.getElementById("image-name-pill").classList.add("flex");
+            document.getElementById("image-name-text").textContent =
+              "exemplo_grafico.jpg";
+            document
+              .getElementById("mobile-image-badge")
+              .classList.remove("hidden");
+            document.getElementById("mobile-image-name").textContent =
+              "exemplo_grafico.jpg";
+
+            const inp = document.getElementById("message-input");
+            if (!inp.value.trim()) {
+              inp.value = "Faça uma análise da imagem exemplo_grafico.jpg";
+              autoResize(inp);
+            }
+            inp.focus();
+          };
+          reader.readAsDataURL(blob);
+        } catch {
+          mostrarErro("Não foi possível carregar a imagem exemplo.");
+        }
+      }
+
+      // ── Chat helpers ────────────────────────────────────
+      function autoResize(el) {
+        el.style.height = "auto";
+        el.style.height = Math.min(el.scrollHeight, 140) + "px";
+      }
+
+      function handleKeyDown(e) {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          enviarMensagem();
+        }
+      }
+
+      function enviarPrompt(texto) {
+        document.getElementById("message-input").value = texto;
+        autoResize(document.getElementById("message-input"));
+        enviarMensagem();
+      }
+
+      function scrollBottom() {
+        const el = document.getElementById("chat-messages");
+        el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+      }
+
+      function agora() {
+        return new Date().toLocaleTimeString("pt-BR", {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+      }
+
+      // ── Append messages ─────────────────────────────────
+      function appendUserMessage(texto, imgPreview) {
+        const container = document.getElementById("chat-messages");
+        const el = document.createElement("div");
+        el.className = "msg-animate flex justify-end";
+        el.innerHTML = `
+    <div class="max-w-xl">
+      <div class="flex items-center gap-2 justify-end mb-1.5">
+        <span class="text-[10px] text-zinc-400">${agora()}</span>
+        <span class="text-xs font-semibold text-zinc-900">Você</span>
+      </div>
+      ${imgPreview ? `<div class="mb-2 flex justify-end"><img src="${imgPreview}" class="max-h-40 rounded-xl shadow-sm border border-zinc-200 object-cover" alt="Imagem enviada"/></div>` : ""}
+      <div class="bg-zinc-900 text-white rounded-2xl rounded-tr-sm px-5 py-3.5 shadow-sm">
+        <p class="text-sm leading-relaxed whitespace-pre-wrap">${escapeHtml(texto)}</p>
+      </div>
+    </div>`;
+        container.appendChild(el);
+        scrollBottom();
+      }
+
+      function appendTypingIndicator() {
+        const container = document.getElementById("chat-messages");
+        const el = document.createElement("div");
+        el.id = "typing-indicator";
+        el.className = "msg-animate flex items-start gap-3";
+        el.innerHTML = `
+    <div class="w-8 h-8 rounded-full bg-gradient-to-b from-black/60 to-black/20 flex items-center justify-center flex-shrink-0 shadow-sm">
+      <svg fill="none" height="14" stroke="white" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 24 24" width="14">
+        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" fill="white" fill-opacity=".4"/>
+        <circle cx="12" cy="12" fill="white" r="3"/>
+      </svg>
+    </div>
+    <div class="max-w-2xl">
+      <div class="flex items-center gap-2 mb-1.5">
+        <span class="text-xs font-semibold text-zinc-900">VisionMind</span>
+        <span class="text-[10px] text-zinc-400">digitando…</span>
+      </div>
+      <div class="bg-white border border-zinc-200 rounded-2xl rounded-tl-sm px-5 py-4 shadow-sm">
+        <div class="flex items-center gap-1.5 h-4">
+          <span class="typing-dot w-2 h-2 rounded-full bg-zinc-400 inline-block"></span>
+          <span class="typing-dot w-2 h-2 rounded-full bg-zinc-400 inline-block"></span>
+          <span class="typing-dot w-2 h-2 rounded-full bg-zinc-400 inline-block"></span>
+        </div>
+      </div>
+    </div>`;
+        container.appendChild(el);
+        scrollBottom();
+      }
+
+      function removeTypingIndicator() {
+        document.getElementById("typing-indicator")?.remove();
+      }
+
+      function appendAIMessage(texto, tempo, imagemUsada) {
+        const container = document.getElementById("chat-messages");
+        const el = document.createElement("div");
+        el.className = "msg-animate flex items-start gap-3";
+
+        const htmlTexto = renderMarkdown(texto);
+        const metaImg = imagemUsada
+          ? `<span class="inline-flex items-center gap-1 text-[10px] text-zinc-400 bg-zinc-50 border border-zinc-200 rounded-full px-2 py-0.5 ml-2">🖼️ ${escapeHtml(imagemUsada)}</span>`
+          : "";
+        const metaTempo = tempo
+          ? `<span class="text-[10px] text-zinc-400 font-mono">⏱ ${tempo}s</span>`
+          : "";
+
+        el.innerHTML = `
+    <div class="w-8 h-8 rounded-full bg-gradient-to-b from-black/60 to-black/20 flex items-center justify-center flex-shrink-0 shadow-sm relative"
+         style="--border-gradient: linear-gradient(180deg, rgba(0,0,0,0.1), rgba(0,0,0,0), rgba(0,0,0,0.1)); --border-radius-before: 9999px;">
+      <svg fill="none" height="14" stroke="white" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 24 24" width="14">
+        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" fill="white" fill-opacity=".4"/>
+        <circle cx="12" cy="12" fill="white" r="3"/>
+      </svg>
+    </div>
+    <div class="max-w-2xl flex-1">
+      <div class="flex items-center gap-2 mb-1.5 flex-wrap">
+        <span class="text-xs font-semibold text-zinc-900">VisionMind</span>
+        <span class="text-[10px] text-zinc-400">${agora()}</span>
+        ${metaImg}
+        ${metaTempo}
+      </div>
+      <div class="bg-white border border-zinc-200 rounded-2xl rounded-tl-sm px-5 py-4 shadow-sm">
+        <div class="ai-content text-sm text-zinc-700 leading-relaxed">${htmlTexto}</div>
+      </div>
+    </div>`;
+        container.appendChild(el);
+        scrollBottom();
+      }
+
+      function appendErrorMessage(msg) {
+        const container = document.getElementById("chat-messages");
+        const el = document.createElement("div");
+        el.className = "msg-animate flex items-start gap-3";
+        el.innerHTML = `
+    <div class="w-8 h-8 rounded-full bg-red-100 border border-red-200 flex items-center justify-center flex-shrink-0">
+      <svg fill="none" height="14" stroke="#ef4444" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="14">
+        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+    </div>
+    <div class="max-w-2xl">
+      <div class="bg-red-50 border border-red-200 rounded-2xl rounded-tl-sm px-5 py-4 shadow-sm">
+        <p class="text-sm text-red-700 leading-relaxed font-medium">${escapeHtml(msg)}</p>
+      </div>
+    </div>`;
+        container.appendChild(el);
+        scrollBottom();
+      }
+
+      // ── Send logic ──────────────────────────────────────
+      async function enviarMensagem() {
+        if (carregando) return;
+
+        const inp = document.getElementById("message-input");
+        const texto = inp.value.trim();
+
+        if (!texto && !imagemAtual) {
+          inp.focus();
+          return;
+        }
+
+        const pergunta =
+          texto || (imagemAtual ? "Faça uma análise desta imagem" : "");
+
+        // Clear input
+        inp.value = "";
+        inp.style.height = "auto";
+
+        // Show user message
+        appendUserMessage(pergunta, imagemAtual?.base64 || null);
+
+        // Hide welcome card if present
+        document.getElementById("welcome-card")?.remove();
+
+        // Show typing
+        carregando = true;
+        document.getElementById("send-btn").disabled = true;
+        appendTypingIndicator();
+
+        try {
+          const payload = {
+            pergunta,
+            nome_imagem: imagemAtual?.nome || "",
+            imagem_base64: imagemAtual?.base64 || "",
+          };
+
+          const r = await fetch("/api/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+
+          const data = await r.json();
+          removeTypingIndicator();
+
+          if (data.success) {
+            appendAIMessage(data.output, data.tempo, data.imagem_usada);
+            document.getElementById("timing-display").textContent =
+              `Tempo: ${data.tempo}s`;
+            document
+              .getElementById("timing-display")
+              .classList.remove("hidden");
+          } else {
+            appendErrorMessage(data.error || "Erro desconhecido.");
+          }
+        } catch (err) {
+          removeTypingIndicator();
+          appendErrorMessage(
+            "Não foi possível conectar ao servidor. Certifique-se de que server.py está rodando.",
+          );
+        } finally {
+          carregando = false;
+          document.getElementById("send-btn").disabled = false;
+          inp.focus();
+        }
+      }
+
+      function limparChat() {
+        const container = document.getElementById("chat-messages");
+        container.innerHTML = "";
+        limparImagem();
+        document.getElementById("timing-display").classList.add("hidden");
+
+        // Re-add welcome card
+        const el = document.createElement("div");
+        el.id = "welcome-card";
+        el.className = "msg-animate";
+        el.innerHTML = `
+    <div class="group flex items-start gap-3">
+      <div class="w-8 h-8 rounded-full bg-gradient-to-b from-black/60 to-black/20 flex items-center justify-center flex-shrink-0 shadow-sm relative"
+           style="--border-gradient: linear-gradient(180deg, rgba(0,0,0,0.1), rgba(0,0,0,0), rgba(0,0,0,0.1)); --border-radius-before: 9999px;">
+        <svg fill="none" height="14" stroke="white" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 24 24" width="14">
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" fill="white" fill-opacity=".4"/>
+          <circle cx="12" cy="12" fill="white" r="3"/>
+        </svg>
+      </div>
+      <div class="max-w-2xl">
+        <div class="flex items-center gap-2 mb-1.5">
+          <span class="text-xs font-semibold text-zinc-900">VisionMind</span>
+          <span class="text-[10px] text-zinc-400">agora</span>
+        </div>
+        <div class="bg-white border border-zinc-200 rounded-2xl rounded-tl-sm px-5 py-4 shadow-sm">
+          <p class="text-sm text-zinc-700 leading-relaxed font-medium mb-2">Nova conversa iniciada! Como posso ajudar?</p>
+          <div class="flex flex-wrap gap-2">
+            <button onclick="usarExemplo()" class="text-[11px] font-medium text-zinc-600 bg-zinc-50 border border-zinc-200 rounded-full px-3 py-1 hover:bg-zinc-100 transition-colors">🖼️ Analisar exemplo</button>
+            <button onclick="enviarPrompt('O que é visão computacional?')" class="text-[11px] font-medium text-zinc-600 bg-zinc-50 border border-zinc-200 rounded-full px-3 py-1 hover:bg-zinc-100 transition-colors">🔍 Visão computacional</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+        container.appendChild(el);
+      }
+
+      function mostrarErro(msg) {
+        appendErrorMessage(msg);
+      }
+
+      // ── Utilities ───────────────────────────────────────
+      function escapeHtml(str) {
+        return String(str)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      /** Very lightweight markdown-to-HTML converter */
+      function renderMarkdown(txt) {
+        if (typeof txt === "object") txt = JSON.stringify(txt, null, 2);
+        let h = escapeHtml(String(txt));
+        // Code blocks
+        h = h.replace(/```[\s\S]*?```/g, (m) => {
+          const code = m.replace(/^```[^\n]*\n?/, "").replace(/```$/, "");
+          return `<pre class="bg-zinc-50 border border-zinc-200 rounded-lg p-3 text-xs font-mono overflow-x-auto my-2 whitespace-pre-wrap">${code}</pre>`;
+        });
+        // Inline code
+        h = h.replace(/`([^`]+)`/g, "<code>$1</code>");
+        // Bold
+        h = h.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+        // Italic
+        h = h.replace(/\*([^*]+)\*/g, "<em>$1</em>");
+        // Headings
+        h = h.replace(/^### (.+)$/gm, "<h4>$1</h4>");
+        h = h.replace(/^## (.+)$/gm, "<h3>$1</h3>");
+        // Bullet lists
+        h = h.replace(/^- (.+)$/gm, "<li>$1</li>");
+        h = h.replace(/(<li>[\s\S]+?<\/li>)(?=\n|$)/g, "<ul>$1</ul>");
+        // Numbered lists
+        h = h.replace(/^\d+\. (.+)$/gm, "<li>$1</li>");
+        // Paragraphs
+        h = h
+          .split(/\n\n+/)
+          .map((p) => {
+            p = p.trim();
+            if (!p || p.startsWith("<")) return p;
+            return `<p>${p.replace(/\n/g, "<br/>")}</p>`;
+          })
+          .join("\n");
+        return h;
+      }
+    </script>
+  </body>
+</html>
