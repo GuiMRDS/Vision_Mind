@@ -5,10 +5,7 @@ Assistente multimodal desenvolvido com **Python, LangChain e Google Gemini**, ca
 ---
 
 ## 📸 Interface
-
-### Tela Principal
-
-![Tela Principal](imagem/VisionMind)
+![Tela Principal](imagem/VisionMind.jpg)
 
 ---
 
@@ -69,34 +66,6 @@ Google Gemini
 
 - Gemini Flash
 - Gemini Vision
-
----
-
-## ✨ Melhorias Implementadas
-
-### Interface
-
-- Header reorganizado
-- Hero otimizado
-- Redução de espaços vazios
-- Melhor aproveitamento vertical da tela
-- Layout inspirado em ChatGPT, Claude e Gemini
-- Campo de mensagem sempre acessível
-- Responsividade aprimorada
-
-### Backend
-
-- Correção do carregamento de imagens
-- Compatibilidade entre:
-
-```text
-imagem/
-site/imagem/
-```
-
-- Uso de caminhos absolutos
-- Melhor tratamento de erros
-- Integração completa com o agente LangChain
 
 ---
 
