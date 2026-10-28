@@ -1,4 +1,6 @@
+import io
 import os
+import re
 import sys
 import json
 import time
@@ -7,6 +9,16 @@ import traceback
 import urllib.parse
 
 from http.server import HTTPServer, SimpleHTTPRequestHandler
+
+from PIL import Image
+
+from my_models import GEMINI_FLASH
+
+
+# Evita UnicodeEncodeError no console do Windows (cp1252)
+for _stream in (sys.stdout, sys.stderr):
+    if hasattr(_stream, "reconfigure"):
+        _stream.reconfigure(encoding="utf-8", errors="replace")
 
 
 # ─────────────────────────────────────────────────────────────
@@ -36,6 +48,15 @@ SITE_IMAGEM_DIR = os.path.join(SITE_DIR, "imagem")
 
 os.makedirs(IMAGEM_DIR, exist_ok=True)
 os.makedirs(SITE_IMAGEM_DIR, exist_ok=True)
+
+TAMANHO_MAXIMO_BYTES = 10 * 1024 * 1024
+
+# Formato detectado pelo Pillow → extensão salva
+FORMATOS_PERMITIDOS = {
+    "JPEG": ".jpg",
+    "PNG": ".png",
+    "WEBP": ".webp",
+}
 
 
 # ─────────────────────────────────────────────────────────────
@@ -73,10 +94,8 @@ if AGENTE_DISPONIVEL:
 
 def _salvar_imagem(base64_str: str, nome: str) -> str:
     """
-    Decodifica uma imagem Base64 e salva em:
-
-    imagem/
-    site/imagem/
+    Decodifica uma imagem Base64, valida o conteúdo
+    e salva em imagem/.
 
     Retorna o nome final do arquivo.
     """
@@ -86,30 +105,43 @@ def _salvar_imagem(base64_str: str, nome: str) -> str:
     if "," in base64_str:
         base64_str = base64_str.split(",", 1)[1]
 
-    nome_seguro = os.path.basename(nome)
-
-    if not nome_seguro:
-        nome_seguro = f"imagem_{int(time.time())}.jpg"
-
     try:
-        dados = base64.b64decode(base64_str)
+        dados = base64.b64decode(base64_str, validate=True)
     except Exception as e:
         raise ValueError(f"Base64 inválido: {e}")
+
+    if len(dados) > TAMANHO_MAXIMO_BYTES:
+        raise ValueError("Imagem muito grande. Limite: 10 MB.")
+
+    # Confere se o conteúdo é realmente uma imagem suportada
+    try:
+        with Image.open(io.BytesIO(dados)) as img:
+            img.verify()
+            formato = (img.format or "").upper()
+    except Exception:
+        raise ValueError("O arquivo enviado não é uma imagem válida.")
+
+    if formato not in FORMATOS_PERMITIDOS:
+        raise ValueError(
+            "Formato não suportado. Use JPG, PNG ou WEBP."
+        )
+
+    extensao = FORMATOS_PERMITIDOS[formato]
+
+    base, _ = os.path.splitext(os.path.basename(nome))
+    base = re.sub(r"[^a-zA-Z0-9._-]", "_", base).strip("._")
+
+    if not base:
+        base = f"imagem_{int(time.time())}"
+
+    nome_seguro = f"{base}{extensao}"
 
     caminho_imagem = os.path.join(
         IMAGEM_DIR,
         nome_seguro,
     )
 
-    caminho_site = os.path.join(
-        SITE_IMAGEM_DIR,
-        nome_seguro,
-    )
-
     with open(caminho_imagem, "wb") as arquivo:
-        arquivo.write(dados)
-
-    with open(caminho_site, "wb") as arquivo:
         arquivo.write(dados)
 
     return nome_seguro
@@ -244,6 +276,7 @@ class VisionMindHTTPRequestHandler(SimpleHTTPRequestHandler):
             self._json({
                 "status": "online",
                 "agente_conectado": orquestrador is not None,
+                "modelo": GEMINI_FLASH,
                 "ferramentas": [
                     "Ferramenta Analisadora Imagem",
                     "Ferramenta Explicadora",
@@ -399,6 +432,15 @@ class VisionMindHTTPRequestHandler(SimpleHTTPRequestHandler):
             )
         )
 
+        # Base64 ocupa ~4/3 do tamanho original + margem do JSON
+        if length > TAMANHO_MAXIMO_BYTES * 4 // 3 + 64 * 1024:
+            self._json({
+                "success": False,
+                "error": "Requisição muito grande. Limite: 10 MB.",
+            }, 413)
+
+            return
+
         body = self.rfile.read(length)
 
         # ─────────────────────────────────────────────────────
@@ -440,6 +482,12 @@ class VisionMindHTTPRequestHandler(SimpleHTTPRequestHandler):
                     "nome": nome_final,
                     "url": f"/imagem/{nome_final}",
                 })
+
+            except ValueError as e:
+                self._json({
+                    "success": False,
+                    "error": str(e),
+                }, 400)
 
             except Exception as e:
                 traceback.print_exc()
@@ -488,10 +536,19 @@ class VisionMindHTTPRequestHandler(SimpleHTTPRequestHandler):
                             f"upload_{int(time.time())}.jpg"
                         )
 
-                    nome_imagem = _salvar_imagem(
-                        imagem_base64,
-                        nome_imagem,
-                    )
+                    try:
+                        nome_imagem = _salvar_imagem(
+                            imagem_base64,
+                            nome_imagem,
+                        )
+
+                    except ValueError as e:
+                        self._json({
+                            "success": False,
+                            "error": str(e),
+                        }, 400)
+
+                        return
 
                 # ─────────────────────────────────────────────
                 # 2. Montar prompt

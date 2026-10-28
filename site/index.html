@@ -54,6 +54,9 @@
         -webkit-mask:
           linear-gradient(#fff 0 0) content-box,
           linear-gradient(#fff 0 0);
+        mask:
+          linear-gradient(#fff 0 0) content-box,
+          linear-gradient(#fff 0 0);
         -webkit-mask-composite: xor;
         mask-composite: exclude;
         background: var(--border-gradient);
@@ -193,11 +196,26 @@
       .ai-content p {
         margin-bottom: 0.5rem;
       }
+      .ai-content ul,
+      .ai-content ol {
+        margin-bottom: 0.5rem;
+      }
+      .ai-content hr {
+        border: 0;
+        border-top: 1px solid #e4e4e7;
+        margin: 0.75rem 0;
+      }
+      .ai-content > :first-child {
+        margin-top: 0;
+      }
+      .ai-content > :last-child {
+        margin-bottom: 0;
+      }
     </style>
   </head>
 
   <body
-    class="min-h-screen bg-zinc-500 bg-cover bg-center flex items-center justify-center px-0 py-0 xl:p-8 selection:bg-slate-900 selection:text-white text-slate-800"
+    class="h-[100dvh] overflow-hidden bg-zinc-500 flex items-stretch xl:items-center justify-center xl:p-6 selection:bg-slate-900 selection:text-white text-slate-800"
     style="
       background-image: radial-gradient(
         ellipse at 20% 50%,
@@ -208,18 +226,36 @@
     "
   >
     <!-- ════════════════════════════════════════════════
-     TOP NAV  (from design-system nav pattern)
+     MAIN FRAME  (glass-panel from design-system)
 ════════════════════════════════════════════════ -->
-    <nav
-      class="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-sm border-b border-zinc-200 px-6 py-3"
+    <main
+      class="glass-panel overflow-hidden flex flex-col w-full h-full xl:max-w-[1300px] xl:max-h-[900px] z-10 xl:border xl:border-white/50 xl:rounded-[2rem] xl:shadow-2xl relative"
     >
+      <!-- Vertical grid lines (from design-system) -->
       <div
-        class="max-w-[1300px] mx-auto flex items-center justify-between gap-4"
+        class="absolute inset-0 flex justify-between pointer-events-none z-0 px-6 md:px-10 xl:px-12 w-full h-full"
+      >
+        <div class="h-full w-[1px] bg-zinc-950/5"></div>
+        <div class="h-full w-[1px] bg-zinc-950/5 hidden md:block"></div>
+        <div class="h-full w-[1px] bg-zinc-950/5 hidden lg:block"></div>
+        <div class="h-full w-[1px] bg-zinc-950/5 hidden xl:block"></div>
+        <div class="h-full w-[1px] bg-zinc-950/5"></div>
+      </div>
+
+      <!-- ════════════════════════════════════════════════
+       HEADER
+  ════════════════════════════════════════════════ -->
+      <header
+        class="relative z-20 flex-shrink-0 h-16 flex items-center justify-between gap-3 px-4 sm:px-6 md:px-10 xl:px-12 border-b border-zinc-950/5 bg-white/70 backdrop-blur-sm"
       >
         <!-- Logo -->
-        <div class="flex items-center gap-2 text-zinc-900">
+        <a
+          href="/"
+          class="flex items-center gap-2.5 text-zinc-900 min-w-0"
+          aria-label="VisionMind — início"
+        >
           <div
-            class="flex text-white bg-gradient-to-b from-black/60 to-black/20 w-8 h-8 rounded-full items-center justify-center relative"
+            class="flex flex-shrink-0 text-white bg-gradient-to-b from-black/60 to-black/20 w-9 h-9 rounded-full items-center justify-center relative"
             style="
               --border-gradient: linear-gradient(
                 180deg,
@@ -249,15 +285,28 @@
               />
               <circle cx="12" cy="12" fill="white" r="3" />
             </svg>
+            <!-- Status dot (mobile) -->
+            <span
+              id="status-dot-mobile"
+              class="md:hidden absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white bg-zinc-400"
+            ></span>
           </div>
-          <span class="text-lg font-medium tracking-tight"
-            >Vision<span class="text-zinc-400">Mind</span></span
-          >
-        </div>
+          <div class="flex flex-col leading-none min-w-0">
+            <span class="text-base font-semibold tracking-tight"
+              >Vision<span class="text-zinc-400 font-medium">Mind</span></span
+            >
+            <span
+              class="hidden sm:block text-[10px] font-medium text-zinc-400 tracking-wide mt-1 truncate"
+              >Assistente multimodal</span
+            >
+          </div>
+        </a>
 
         <!-- Status pill -->
         <div
-          class="hidden md:flex items-center gap-2 bg-white/50 border border-white/60 rounded-full px-4 py-1.5 shadow-sm backdrop-blur-sm"
+          id="status-pill"
+          class="hidden md:flex items-center gap-2.5 bg-white/60 border border-zinc-200/70 rounded-full pl-3 pr-4 py-1.5 shadow-sm backdrop-blur-sm"
+          title="Status do agente"
         >
           <span class="relative flex h-2 w-2">
             <span
@@ -274,29 +323,43 @@
             class="text-[10px] uppercase font-semibold text-zinc-500 tracking-wide"
             >Conectando…</span
           >
+          <span class="w-px h-3 bg-zinc-200"></span>
+          <span
+            id="status-model"
+            class="text-[11px] font-mono text-zinc-500"
+            >—</span
+          >
         </div>
 
-        <!-- CTA -->
-        <div class="flex items-center gap-3">
-          <span class="text-xs font-medium text-zinc-500 hidden sm:block"
-            >Gemini Flash · ReAct Agent</span
+        <!-- Actions -->
+        <div class="flex items-center gap-2">
+          <button
+            id="hero-toggle"
+            onclick="alternarHero()"
+            aria-expanded="true"
+            aria-controls="hero"
+            title="Mostrar/ocultar apresentação"
+            class="flex items-center justify-center w-9 h-9 rounded-full text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 transition-colors"
           >
+            <svg
+              id="hero-toggle-icon"
+              class="transition-transform duration-300"
+              fill="none"
+              height="16"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1.75"
+              viewBox="0 0 24 24"
+              width="16"
+            >
+              <polyline points="18 15 12 9 6 15" />
+            </svg>
+          </button>
           <button
             onclick="limparChat()"
-            class="flex items-center gap-2 text-xs font-medium text-zinc-600 bg-gradient-to-b from-black/10 via-black/20 to-black/10 rounded-full px-4 py-2 hover:bg-zinc-50 transition-all"
-            style="
-              box-shadow:
-                0 18px 35px rgba(31, 41, 55, 0.15),
-                0 0 0 1px rgba(209, 213, 219, 0.3);
-              position: relative;
-              --border-gradient: linear-gradient(
-                180deg,
-                rgba(255, 255, 255, 0.8),
-                rgba(0, 0, 0, 0.4),
-                rgba(255, 255, 255, 0.8)
-              );
-              --border-radius-before: 9999px;
-            "
+            title="Nova conversa"
+            class="flex items-center gap-2 text-xs font-medium text-zinc-700 bg-white border border-zinc-200 rounded-full h-9 px-3 sm:px-4 shadow-sm hover:bg-zinc-50 hover:border-zinc-300 transition-all"
           >
             <svg
               fill="none"
@@ -304,50 +367,31 @@
               stroke="currentColor"
               stroke-linecap="round"
               stroke-linejoin="round"
-              stroke-width="1.5"
+              stroke-width="1.75"
               viewBox="0 0 24 24"
               width="14"
             >
-              <polyline points="1 4 1 10 7 10" />
-              <path d="M3.51 15a9 9 0 1 0 .49-3.5" />
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
             </svg>
-            <span class="text-black/60">Nova conversa</span>
+            <span class="hidden sm:inline">Nova conversa</span>
           </button>
         </div>
-      </div>
-    </nav>
-
-    <!-- ════════════════════════════════════════════════
-     MAIN FRAME  (glass-panel from design-system)
-════════════════════════════════════════════════ -->
-    <main
-      class="glass-panel overflow-hidden flex flex-col xl:max-w-[1300px] z-10 xl:border-white/50 border-none xl:border xl:rounded-[2.5rem] xl:shadow-2xl min-h-screen xl:min-h-[700px] w-full rounded-none relative shadow-none mt-14"
-      style="min-height: calc(100vh - 3.5rem)"
-    >
-      <!-- Vertical grid lines (from design-system) -->
-      <div
-        class="absolute inset-0 flex justify-between pointer-events-none z-0 px-6 md:px-10 xl:px-12 w-full h-full"
-      >
-        <div class="h-full w-[1px] bg-zinc-950/5"></div>
-        <div class="h-full w-[1px] bg-zinc-950/5 hidden md:block"></div>
-        <div class="h-full w-[1px] bg-zinc-950/5 hidden lg:block"></div>
-        <div class="h-full w-[1px] bg-zinc-950/5 hidden xl:block"></div>
-        <div class="h-full w-[1px] bg-zinc-950/5"></div>
-      </div>
+      </header>
 
       <!-- ── Inner content ── -->
-      <div
-        class="relative z-10 flex flex-col h-full"
-        style="height: calc(100vh - 3.5rem)"
-      >
-        <!-- ── HERO HEADER ── -->
-        <section class="px-6 md:px-10 xl:px-12 pt-8 pb-6 flex-shrink-0">
+      <div class="relative z-10 flex flex-col flex-1 min-h-0">
+        <!-- ── HERO ── -->
+        <section
+          id="hero"
+          class="px-6 md:px-10 xl:px-12 pt-6 pb-5 flex-shrink-0"
+        >
           <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16">
             <!-- Left: title -->
             <div class="lg:col-span-7 flex flex-col justify-center">
               <!-- Social proof pill -->
               <div
-                class="inline-flex bg-white/60 w-max rounded-full mb-5 px-4 py-1.5 shadow-sm backdrop-blur-sm items-center gap-2 border border-white/40"
+                class="inline-flex bg-white/60 w-max rounded-full mb-4 px-4 py-1.5 shadow-sm backdrop-blur-sm items-center gap-2 border border-white/40"
               >
                 <span class="relative flex h-2 w-2">
                   <span
@@ -365,7 +409,7 @@
 
               <!-- Headline -->
               <h1
-                class="leading-tight text-4xl md:text-5xl lg:text-[3.5rem] font-medium text-zinc-900 tracking-tighter mb-4"
+                class="leading-tight text-3xl md:text-4xl lg:text-5xl font-medium text-zinc-900 tracking-tighter mb-3"
               >
                 Vision<span
                   class="text-transparent bg-clip-text bg-gradient-to-r from-zinc-400 to-zinc-200 font-light"
@@ -376,8 +420,8 @@
                 class="text-sm text-zinc-500 font-medium max-w-md leading-relaxed tracking-wide border-l-2 border-zinc-200 pl-4"
               >
                 Assistente inteligente com visão computacional. Envie imagens
-                JPG para análise detalhada ou faça perguntas sobre qualquer
-                tema.
+                (JPG, PNG ou WEBP) para análise detalhada ou faça perguntas
+                sobre qualquer tema.
               </p>
             </div>
 
@@ -386,7 +430,7 @@
               <div
                 class="w-full rounded-2xl overflow-hidden shadow-xl shadow-zinc-900/20 border border-white/20 relative"
                 style="
-                  min-height: 200px;
+                  min-height: 180px;
                   background: linear-gradient(
                     135deg,
                     #27272a 0%,
@@ -431,7 +475,7 @@
                       <div class="h-[72px] flex flex-col justify-center">
                         <span
                           class="text-white text-xs font-semibold tracking-wide mb-0.5"
-                          >🖼️ Análise de Imagens JPG</span
+                          >🖼️ Análise de Imagens</span
                         >
                         <span class="text-white/60 text-[10px] leading-relaxed"
                           >Envie qualquer imagem e receba uma análise detalhada
@@ -466,7 +510,7 @@
           </div>
 
           <!-- Stats row (from design-system footer stats) -->
-          <div class="flex flex-wrap gap-4 md:gap-8 mt-6 items-center">
+          <div class="flex flex-wrap gap-4 md:gap-8 mt-5 items-center">
             <div class="flex items-center group cursor-default">
               <div class="px-1 text-center">
                 <p
@@ -485,7 +529,9 @@
                 >
                   Modelo
                 </p>
-                <p class="text-sm text-zinc-900 font-medium">Gemini Flash</p>
+                <p id="hero-model" class="text-sm text-zinc-900 font-medium font-mono">
+                  —
+                </p>
               </div>
               <div class="curve-separator opacity-60 ml-4"></div>
             </div>
@@ -496,7 +542,7 @@
                 >
                   Formatos
                 </p>
-                <p class="text-sm text-zinc-900 font-medium">JPG / JPEG</p>
+                <p class="text-sm text-zinc-900 font-medium">JPG · PNG · WEBP</p>
               </div>
             </div>
           </div>
@@ -538,7 +584,7 @@
                 <input
                   id="file-input"
                   type="file"
-                  accept=".jpg,.jpeg"
+                  accept=".jpg,.jpeg,.png,.webp"
                   class="hidden"
                   onchange="handleFileSelect(event)"
                 />
@@ -582,9 +628,11 @@
                     </svg>
                   </div>
                   <p class="text-xs font-medium text-zinc-500">
-                    Arraste ou clique para<br />selecionar imagem JPG
+                    Arraste ou clique para<br />selecionar uma imagem
                   </p>
-                  <p class="text-[10px] text-zinc-400 mt-1">Máx. 10 MB</p>
+                  <p class="text-[10px] text-zinc-400 mt-1">
+                    JPG, PNG ou WEBP · Máx. 10 MB
+                  </p>
                 </div>
               </div>
 
@@ -739,8 +787,10 @@
                     class="text-[10px] uppercase font-semibold text-zinc-400 tracking-widest"
                     >Modelo</span
                   >
-                  <span class="text-xs font-mono text-zinc-600"
-                    >gemini-2.5-flash</span
+                  <span
+                    id="sidebar-model"
+                    class="text-xs font-mono text-zinc-600 truncate ml-2"
+                    >—</span
                   >
                 </div>
                 <div class="flex items-center justify-between">
@@ -820,7 +870,7 @@
                         inteligente com visão computacional. 👁️
                       </p>
                       <p class="text-sm text-zinc-500 leading-relaxed mb-4">
-                        Posso analisar imagens JPG em detalhes e responder suas
+                        Posso analisar imagens em detalhes e responder suas
                         dúvidas sobre qualquer tema.
                       </p>
                       <!-- Quick start chips -->
@@ -865,7 +915,7 @@
                   <input
                     id="file-input-mobile"
                     type="file"
-                    accept=".jpg,.jpeg"
+                    accept=".jpg,.jpeg,.png,.webp"
                     class="hidden"
                     onchange="handleFileSelect(event)"
                   />
@@ -977,8 +1027,11 @@
 ════════════════════════════════════════════════ -->
     <script>
       // ── State ──────────────────────────────────────────
-      let imagemAtual = null; // { nome, base64, url }
+      let imagemAtual = null; // { nome, base64 }
       let carregando = false;
+
+      const FORMATOS_ACEITOS = ["image/jpeg", "image/png", "image/webp"];
+      const TAMANHO_MAXIMO = 10 * 1024 * 1024;
 
       // ── Init ───────────────────────────────────────────
       document.addEventListener("DOMContentLoaded", () => {
@@ -990,26 +1043,54 @@
       // ── Status check ───────────────────────────────────
       async function verificarStatus() {
         const dot = document.getElementById("status-dot");
+        const dotMobile = document.getElementById("status-dot-mobile");
         const ping = document.getElementById("status-ping");
         const label = document.getElementById("status-label");
+        const pill = document.getElementById("status-pill");
+
+        let cor = "zinc";
+        let texto = "Servidor Offline";
+
         try {
           const r = await fetch("/api/status");
           if (!r.ok) throw new Error();
           const d = await r.json();
           const ok = d.agente_conectado;
-          dot.className = `relative inline-flex rounded-full h-2 w-2 ${ok ? "bg-emerald-500" : "bg-yellow-500"}`;
-          ping.className = `animate-ping absolute inline-flex h-full w-full rounded-full ${ok ? "bg-emerald-400" : "bg-yellow-400"} opacity-75`;
-          label.textContent = ok ? "Agente Online" : "Agente Desconectado";
-          label.className = `text-[10px] uppercase font-semibold ${ok ? "text-emerald-600" : "text-yellow-600"} tracking-wide`;
+          cor = ok ? "emerald" : "yellow";
+          texto = ok ? "Agente Online" : "Agente Desconectado";
+
+          if (d.modelo) {
+            for (const id of ["status-model", "hero-model", "sidebar-model"]) {
+              document.getElementById(id).textContent = d.modelo;
+            }
+          }
         } catch {
-          dot.className =
-            "relative inline-flex rounded-full h-2 w-2 bg-zinc-400";
-          ping.className =
-            "animate-ping absolute inline-flex h-full w-full rounded-full bg-zinc-400 opacity-75";
-          label.textContent = "Servidor Offline";
-          label.className =
-            "text-[10px] uppercase font-semibold text-zinc-500 tracking-wide";
+          // mantém o estado "offline"
         }
+
+        dot.className = `relative inline-flex rounded-full h-2 w-2 bg-${cor}-500`;
+        ping.className = `animate-ping absolute inline-flex h-full w-full rounded-full bg-${cor}-400 opacity-75`;
+        label.textContent = texto;
+        label.className = `text-[10px] uppercase font-semibold text-${cor}-600 tracking-wide`;
+        dotMobile.className = `md:hidden absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white bg-${cor}-500`;
+        dotMobile.title = texto;
+        pill.title = texto;
+      }
+
+      // ── Hero (apresentação) ────────────────────────────
+      function definirHero(visivel) {
+        document.getElementById("hero").classList.toggle("hidden", !visivel);
+        document
+          .getElementById("hero-toggle")
+          .setAttribute("aria-expanded", String(visivel));
+        document
+          .getElementById("hero-toggle-icon")
+          .classList.toggle("rotate-180", !visivel);
+      }
+
+      function alternarHero() {
+        const hero = document.getElementById("hero");
+        definirHero(hero.classList.contains("hidden"));
       }
 
       // ── File handling ───────────────────────────────────
@@ -1027,49 +1108,45 @@
       }
 
       function processarArquivo(file) {
-        if (!file.type.match(/image\/(jpeg)/)) {
-          mostrarErro("Apenas arquivos JPG/JPEG são suportados.");
+        if (!FORMATOS_ACEITOS.includes(file.type)) {
+          mostrarErro("Formato não suportado. Use JPG, PNG ou WEBP.");
           return;
         }
-        if (file.size > 10 * 1024 * 1024) {
+        if (file.size > TAMANHO_MAXIMO) {
           mostrarErro("Arquivo muito grande. Limite: 10 MB.");
           return;
         }
 
         const reader = new FileReader();
         reader.onload = (ev) => {
-          const base64 = ev.target.result;
           const nome = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-
-          imagemAtual = { nome, base64, url: base64 };
-
-          // Show preview
-          document.getElementById("preview-img").src = base64;
-          document
-            .getElementById("preview-container")
-            .classList.remove("hidden");
-          document.getElementById("drop-placeholder").classList.add("hidden");
-          document.getElementById("image-name-pill").classList.remove("hidden");
-          document.getElementById("image-name-pill").classList.add("flex");
-          document.getElementById("image-name-text").textContent = nome;
-          document
-            .getElementById("mobile-image-badge")
-            .classList.remove("hidden");
-          document.getElementById("mobile-image-name").textContent = nome;
-
-          // Auto-fill input suggestion
-          const inp = document.getElementById("message-input");
-          if (!inp.value.trim()) {
-            inp.value = "Faça uma análise desta imagem";
-            autoResize(inp);
-          }
-          inp.focus();
+          definirImagem(nome, ev.target.result, "Faça uma análise desta imagem");
         };
         reader.readAsDataURL(file);
       }
 
+      function definirImagem(nome, base64, sugestao) {
+        imagemAtual = { nome, base64 };
+
+        document.getElementById("preview-img").src = base64;
+        document.getElementById("preview-container").classList.remove("hidden");
+        document.getElementById("drop-placeholder").classList.add("hidden");
+        document.getElementById("image-name-pill").classList.remove("hidden");
+        document.getElementById("image-name-text").textContent = nome;
+        document.getElementById("mobile-image-badge").classList.remove("hidden");
+        document.getElementById("mobile-image-name").textContent = nome;
+
+        const inp = document.getElementById("message-input");
+        if (!inp.value.trim()) {
+          inp.value = sugestao;
+          autoResize(inp);
+        }
+        inp.focus();
+      }
+
       function limparImagem() {
         imagemAtual = null;
+        document.getElementById("preview-img").src = "";
         document.getElementById("preview-container").classList.add("hidden");
         document.getElementById("drop-placeholder").classList.remove("hidden");
         document.getElementById("image-name-pill").classList.add("hidden");
@@ -1078,38 +1155,16 @@
 
       async function usarExemplo() {
         try {
-          // Fetch example image
           const r = await fetch("/imagem/exemplo_grafico.jpg");
+          if (!r.ok) throw new Error();
           const blob = await r.blob();
           const reader = new FileReader();
-          reader.onload = (ev) => {
-            const base64 = ev.target.result;
-            imagemAtual = { nome: "exemplo_grafico.jpg", base64, url: base64 };
-
-            document.getElementById("preview-img").src = base64;
-            document
-              .getElementById("preview-container")
-              .classList.remove("hidden");
-            document.getElementById("drop-placeholder").classList.add("hidden");
-            document
-              .getElementById("image-name-pill")
-              .classList.remove("hidden");
-            document.getElementById("image-name-pill").classList.add("flex");
-            document.getElementById("image-name-text").textContent =
-              "exemplo_grafico.jpg";
-            document
-              .getElementById("mobile-image-badge")
-              .classList.remove("hidden");
-            document.getElementById("mobile-image-name").textContent =
-              "exemplo_grafico.jpg";
-
-            const inp = document.getElementById("message-input");
-            if (!inp.value.trim()) {
-              inp.value = "Faça uma análise da imagem exemplo_grafico.jpg";
-              autoResize(inp);
-            }
-            inp.focus();
-          };
+          reader.onload = (ev) =>
+            definirImagem(
+              "exemplo_grafico.jpg",
+              ev.target.result,
+              "Faça uma análise desta imagem",
+            );
           reader.readAsDataURL(blob);
         } catch {
           mostrarErro("Não foi possível carregar a imagem exemplo.");
@@ -1203,11 +1258,11 @@
       function appendAIMessage(texto, tempo, imagemUsada) {
         const container = document.getElementById("chat-messages");
         const el = document.createElement("div");
-        el.className = "msg-animate flex items-start gap-3";
+        el.className = "msg-animate group flex items-start gap-3";
 
         const htmlTexto = renderMarkdown(texto);
         const metaImg = imagemUsada
-          ? `<span class="inline-flex items-center gap-1 text-[10px] text-zinc-400 bg-zinc-50 border border-zinc-200 rounded-full px-2 py-0.5 ml-2">🖼️ ${escapeHtml(imagemUsada)}</span>`
+          ? `<span class="inline-flex items-center gap-1 text-[10px] text-zinc-400 bg-zinc-50 border border-zinc-200 rounded-full px-2 py-0.5">🖼️ ${escapeHtml(imagemUsada)}</span>`
           : "";
         const metaTempo = tempo
           ? `<span class="text-[10px] text-zinc-400 font-mono">⏱ ${tempo}s</span>`
@@ -1221,7 +1276,7 @@
         <circle cx="12" cy="12" fill="white" r="3"/>
       </svg>
     </div>
-    <div class="max-w-2xl flex-1">
+    <div class="max-w-2xl flex-1 min-w-0">
       <div class="flex items-center gap-2 mb-1.5 flex-wrap">
         <span class="text-xs font-semibold text-zinc-900">VisionMind</span>
         <span class="text-[10px] text-zinc-400">${agora()}</span>
@@ -1231,9 +1286,33 @@
       <div class="bg-white border border-zinc-200 rounded-2xl rounded-tl-sm px-5 py-4 shadow-sm">
         <div class="ai-content text-sm text-zinc-700 leading-relaxed">${htmlTexto}</div>
       </div>
+      <button type="button" class="copy-btn mt-1.5 inline-flex items-center gap-1.5 text-[10px] font-medium text-zinc-400 hover:text-zinc-700 rounded-full px-2 py-1 hover:bg-zinc-100 opacity-100 md:opacity-0 md:group-hover:opacity-100 focus:opacity-100 transition-all">
+        <svg fill="none" height="12" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" viewBox="0 0 24 24" width="12">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+        </svg>
+        <span class="copy-label">Copiar</span>
+      </button>
     </div>`;
+
+        const textoBruto =
+          typeof texto === "object" ? JSON.stringify(texto, null, 2) : String(texto);
+        el.querySelector(".copy-btn").addEventListener("click", () =>
+          copiarTexto(textoBruto, el.querySelector(".copy-label")),
+        );
+
         container.appendChild(el);
         scrollBottom();
+      }
+
+      async function copiarTexto(texto, labelEl) {
+        try {
+          await navigator.clipboard.writeText(texto);
+          labelEl.textContent = "Copiado!";
+        } catch {
+          labelEl.textContent = "Falha ao copiar";
+        }
+        setTimeout(() => (labelEl.textContent = "Copiar"), 1500);
       }
 
       function appendErrorMessage(msg) {
@@ -1277,8 +1356,9 @@
         // Show user message
         appendUserMessage(pergunta, imagemAtual?.base64 || null);
 
-        // Hide welcome card if present
+        // Hide welcome card and hero to give room to the chat
         document.getElementById("welcome-card")?.remove();
+        definirHero(false);
 
         // Show typing
         carregando = true;
@@ -1289,7 +1369,7 @@
           const payload = {
             pergunta,
             nome_imagem: imagemAtual?.nome || "",
-            imagem_base64: imagemAtual?.base64 || "",
+            imagem: imagemAtual?.base64 || "",
           };
 
           const r = await fetch("/api/chat", {
@@ -1327,6 +1407,7 @@
         const container = document.getElementById("chat-messages");
         container.innerHTML = "";
         limparImagem();
+        definirHero(true);
         document.getElementById("timing-display").classList.add("hidden");
 
         // Re-add welcome card
@@ -1357,6 +1438,7 @@
       </div>
     </div>`;
         container.appendChild(el);
+        document.getElementById("message-input").focus();
       }
 
       function mostrarErro(msg) {
@@ -1372,39 +1454,91 @@
           .replace(/"/g, "&quot;");
       }
 
-      /** Very lightweight markdown-to-HTML converter */
+      /** Formatação inline: código, negrito e itálico (texto já escapado) */
+      function renderInline(t) {
+        return t
+          .replace(/`([^`]+)`/g, "<code>$1</code>")
+          .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+          .replace(/(^|[^*])\*([^*\s][^*]*)\*/g, "$1<em>$2</em>");
+      }
+
+      /** Conversor leve de markdown para HTML */
       function renderMarkdown(txt) {
         if (typeof txt === "object") txt = JSON.stringify(txt, null, 2);
-        let h = escapeHtml(String(txt));
-        // Code blocks
-        h = h.replace(/```[\s\S]*?```/g, (m) => {
-          const code = m.replace(/^```[^\n]*\n?/, "").replace(/```$/, "");
-          return `<pre class="bg-zinc-50 border border-zinc-200 rounded-lg p-3 text-xs font-mono overflow-x-auto my-2 whitespace-pre-wrap">${code}</pre>`;
-        });
-        // Inline code
-        h = h.replace(/`([^`]+)`/g, "<code>$1</code>");
-        // Bold
-        h = h.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
-        // Italic
-        h = h.replace(/\*([^*]+)\*/g, "<em>$1</em>");
-        // Headings
-        h = h.replace(/^### (.+)$/gm, "<h4>$1</h4>");
-        h = h.replace(/^## (.+)$/gm, "<h3>$1</h3>");
-        // Bullet lists
-        h = h.replace(/^- (.+)$/gm, "<li>$1</li>");
-        h = h.replace(/(<li>[\s\S]+?<\/li>)(?=\n|$)/g, "<ul>$1</ul>");
-        // Numbered lists
-        h = h.replace(/^\d+\. (.+)$/gm, "<li>$1</li>");
-        // Paragraphs
-        h = h
-          .split(/\n\n+/)
-          .map((p) => {
-            p = p.trim();
-            if (!p || p.startsWith("<")) return p;
-            return `<p>${p.replace(/\n/g, "<br/>")}</p>`;
-          })
-          .join("\n");
-        return h;
+
+        // Separa os blocos de código antes de processar as linhas
+        const blocos = [];
+        const texto = escapeHtml(String(txt)).replace(
+          /```[^\n]*\n?([\s\S]*?)```/g,
+          (_, code) => {
+            blocos.push(code);
+            return `\n\u0000${blocos.length - 1}\u0000\n`;
+          },
+        );
+
+        const saida = [];
+        let lista = null; // "ul" | "ol"
+        let paragrafo = [];
+
+        const fecharParagrafo = () => {
+          if (paragrafo.length) {
+            saida.push(`<p>${paragrafo.map(renderInline).join("<br/>")}</p>`);
+            paragrafo = [];
+          }
+        };
+        const fecharLista = () => {
+          if (lista) {
+            saida.push(`</${lista}>`);
+            lista = null;
+          }
+        };
+        const abrirLista = (tipo) => {
+          if (lista !== tipo) {
+            fecharLista();
+            saida.push(`<${tipo}>`);
+            lista = tipo;
+          }
+        };
+
+        for (const linha of texto.split("\n")) {
+          const l = linha.trim();
+          let m;
+
+          if ((m = l.match(/^\u0000(\d+)\u0000$/))) {
+            fecharParagrafo();
+            fecharLista();
+            saida.push(
+              `<pre class="bg-zinc-50 border border-zinc-200 rounded-lg p-3 text-xs font-mono overflow-x-auto my-2 whitespace-pre-wrap">${blocos[m[1]]}</pre>`,
+            );
+          } else if (!l) {
+            fecharParagrafo();
+            fecharLista();
+          } else if (/^(-{3,}|\*{3,}|_{3,})$/.test(l)) {
+            fecharParagrafo();
+            fecharLista();
+            saida.push("<hr/>");
+          } else if ((m = l.match(/^(#{1,4})\s+(.+)$/))) {
+            fecharParagrafo();
+            fecharLista();
+            const tag = m[1].length <= 2 ? "h3" : "h4";
+            saida.push(`<${tag}>${renderInline(m[2])}</${tag}>`);
+          } else if ((m = l.match(/^[-*•]\s+(.+)$/))) {
+            fecharParagrafo();
+            abrirLista("ul");
+            saida.push(`<li>${renderInline(m[1])}</li>`);
+          } else if ((m = l.match(/^\d+[.)]\s+(.+)$/))) {
+            fecharParagrafo();
+            abrirLista("ol");
+            saida.push(`<li>${renderInline(m[1])}</li>`);
+          } else {
+            fecharLista();
+            paragrafo.push(l);
+          }
+        }
+
+        fecharParagrafo();
+        fecharLista();
+        return saida.join("\n");
       }
     </script>
   </body>

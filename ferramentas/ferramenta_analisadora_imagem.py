@@ -26,6 +26,13 @@ BASE_DIR = os.path.dirname(
     )
 )
 
+TIPOS_MIME = {
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".png": "image/png",
+    ".webp": "image/webp",
+}
+
 
 class FerramentaAnalisadoraImagem(BaseTool):
 
@@ -47,9 +54,6 @@ class FerramentaAnalisadoraImagem(BaseTool):
 
     def _run(self, acao):
 
-        print("TIPO:", type(acao))
-        print("VALOR:", repr(acao))
-
         try:
             dados = ast.literal_eval(acao)
 
@@ -61,7 +65,9 @@ class FerramentaAnalisadoraImagem(BaseTool):
         except Exception:
             nome_imagem = acao
 
-        nome_imagem = nome_imagem.strip()
+        nome_imagem = os.path.basename(
+            str(nome_imagem).strip().strip("'\"")
+        )
 
         caminhos_possiveis = [
             os.path.join(
@@ -84,29 +90,13 @@ class FerramentaAnalisadoraImagem(BaseTool):
                 caminho_arquivo = caminho
                 break
 
-        print("\n========== DEBUG ==========")
-        print("BASE_DIR:", BASE_DIR)
-        print("IMAGEM:", nome_imagem)
-
-        for caminho in caminhos_possiveis:
-            print(
-                f"EXISTE? {os.path.exists(caminho)} -> {caminho}"
-            )
-
-        print("===========================\n")
-
         if caminho_arquivo is None:
-            return {
-                "erro": (
-                    f"Imagem não encontrada: "
-                    f"{nome_imagem}"
-                )
-            }
-
-        print("ARQUIVO ENCONTRADO:")
-        print(caminho_arquivo)
+            return f"Erro: imagem não encontrada: {nome_imagem}"
 
         imagem = encode_image(caminho_arquivo)
+
+        extensao = os.path.splitext(caminho_arquivo)[1].lower()
+        mime_type = TIPOS_MIME.get(extensao, "image/jpeg")
 
         llm = ChatGoogleGenerativeAI(
             api_key=GEMINI_API_KEY,
@@ -149,7 +139,7 @@ class FerramentaAnalisadoraImagem(BaseTool):
                                 "image_url": {
                                     "url":
                                     (
-                                        "data:image/jpeg;base64,"
+                                        "data:{mime_type};base64,"
                                         "{imagem_informada}"
                                     )
                                 },
@@ -207,8 +197,32 @@ class FerramentaAnalisadoraImagem(BaseTool):
 
         resposta = cadeia_completa.invoke(
             {
-                "imagem_informada": imagem
+                "imagem_informada": imagem,
+                "mime_type": mime_type,
             }
         )
 
-        return resposta
+        return _formatar_resposta(resposta)
+
+
+def _formatar_resposta(resposta) -> str:
+    """
+    Converte o JSON {titulo, descricao, rotulos} em
+    texto markdown, já que o agente espera uma string.
+    """
+
+    if not isinstance(resposta, dict):
+        return str(resposta)
+
+    titulo = resposta.get("titulo", "Análise da imagem")
+    descricao = resposta.get("descricao", "")
+    rotulos = resposta.get("rotulos") or []
+
+    texto = f"### {titulo}\n\n{descricao}"
+
+    if rotulos:
+        texto += "\n\n**Rótulos:** " + ", ".join(
+            str(rotulo) for rotulo in rotulos
+        )
+
+    return texto

@@ -20,8 +20,18 @@ class FerramentaExplicadora(BaseTool):
     return_direct : bool = True
 
     def _run(self, acao):
-        acao = ast.literal_eval(acao)
-        tema_parametro  = acao.get("tema", "")
+        # O agente pode mandar {"tema": "..."} ou apenas o texto puro
+        try:
+            dados = ast.literal_eval(acao)
+        except (ValueError, SyntaxError):
+            dados = acao
+
+        if isinstance(dados, dict):
+            tema_parametro = dados.get("tema", "")
+        else:
+            tema_parametro = str(dados)
+
+        tema_parametro = tema_parametro.strip()
 
         llm = ChatGoogleGenerativeAI(
             api_key=GEMINI_API_KEY,
@@ -62,7 +72,5 @@ class FerramentaExplicadora(BaseTool):
         resposta = cadeia.invoke(
             {"tema": tema_parametro}
         )
-
-        print("RESPOSTA:", resposta)
 
         return resposta

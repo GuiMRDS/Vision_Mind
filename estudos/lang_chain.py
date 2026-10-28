@@ -6,9 +6,9 @@ from langchain.globals import set_debug
 from my_keys import GEMINI_API_KEY
 from my_models import GEMINI_FLASH
 from my_helper import encode_image
-from langchain.detalhes_imagem_modelo import DetalhesImagemModelo
+from estudos.detalhes_imagem_modelo import DetalhesImagemModelo
 
-# Desativa logs de depuração
+# Ativa logs de depuração (execute com: python -m estudos.lang_chain)
 set_debug(True)
 
 # Instancia o modelo LLM com as credenciais e configuração adequadas

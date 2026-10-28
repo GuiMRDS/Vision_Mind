@@ -1,5 +1,11 @@
 .env
-.imagem
+
+# Uploads feitos pela interface (mantém só as imagens do projeto)
+imagem/*
+!imagem/exemplo_grafico.jpg
+!imagem/VisionMind.jpg
+site/imagem/*
+!site/imagem/exemplo_grafico.jpg
 
 *__pycache__/
 *venv*/
