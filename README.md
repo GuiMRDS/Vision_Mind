@@ -5,12 +5,6 @@ Assistente multimodal desenvolvido com **Python, LangChain e Google Gemini**, ca
 ---
 
 ## 📸 Interface
-<<<<<<< HEAD
-
-### Tela Principal
-
-=======
->>>>>>> 7ccf89ae23d06d6a758badb87ffa747001aa282a
 ![Tela Principal](imagem/VisionMind.jpg)
 
 ---
@@ -21,7 +15,7 @@ Assistente multimodal desenvolvido com **Python, LangChain e Google Gemini**, ca
 - 🖼️ Análise de imagens com Gemini Vision
 - 🧠 Explicação de conceitos e conteúdos
 - 🔧 Agente Orquestrador com LangChain
-- 📤 Upload de imagens (JPG, PNG, WEBP · até 10 MB) com validação no servidor
+- 📤 Upload de imagens pela interface
 - 🌐 Aplicação Web responsiva
 - 📡 Comunicação Frontend ↔ Backend
 
@@ -75,62 +69,6 @@ Google Gemini
 
 ---
 
-<<<<<<< HEAD
-## ✨ Melhorias Implementadas
-
-### Interface
-
-- Header reorganizado
-- Hero otimizado
-- Redução de espaços vazios
-- Melhor aproveitamento vertical da tela
-- Layout inspirado em ChatGPT, Claude e Gemini
-- Campo de mensagem sempre acessível
-- Responsividade aprimorada
-
-### Backend
-
-- Correção do carregamento de imagens
-- Compatibilidade entre:
-
-```text
-imagem/
-site/imagem/
-```
-
-- Uso de caminhos absolutos
-- Melhor tratamento de erros
-- Integração completa com o agente LangChain
-
----
-
-## 📂 Estrutura do Projeto
-
-```text
-VisionMind/
-│
-├── agente/            # Agente orquestrador (ReAct) e modelo Pydantic
-├── ferramentas/       # Ferramenta Analisadora de Imagem e Ferramenta Explicadora
-├── estudos/           # Chain de análise de imagem isolada (python -m estudos.lang_chain)
-├── imagem/            # Imagens do projeto + uploads (uploads ignorados pelo git)
-├── site/
-│   ├── index.html     # Interface web (HTML + Tailwind + JS)
-│   └── imagem/
-├── testes/            # Scripts avulsos para testar modelos/SDK
-│
-├── main.py
-├── server.py
-├── my_helper.py
-├── my_keys.py
-├── my_models.py
-├── requirements.txt
-└── .env
-```
-
----
-
-=======
->>>>>>> 7ccf89ae23d06d6a758badb87ffa747001aa282a
 ## ⚙️ Instalação
 
 ### Clonar repositório
