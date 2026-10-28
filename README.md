@@ -5,9 +5,12 @@ Assistente multimodal desenvolvido com **Python, LangChain e Google Gemini**, ca
 ---
 
 ## 📸 Interface
+<<<<<<< HEAD
 
 ### Tela Principal
 
+=======
+>>>>>>> 7ccf89ae23d06d6a758badb87ffa747001aa282a
 ![Tela Principal](imagem/VisionMind.jpg)
 
 ---
@@ -72,6 +75,7 @@ Google Gemini
 
 ---
 
+<<<<<<< HEAD
 ## ✨ Melhorias Implementadas
 
 ### Interface
@@ -125,6 +129,8 @@ VisionMind/
 
 ---
 
+=======
+>>>>>>> 7ccf89ae23d06d6a758badb87ffa747001aa282a
 ## ⚙️ Instalação
 
 ### Clonar repositório
