@@ -4,6 +4,7 @@
 imagem/*
 !imagem/exemplo_grafico.jpg
 !imagem/VisionMind.jpg
+!imagem/VisionMind_conversa.jpg
 site/imagem/*
 !site/imagem/exemplo_grafico.jpg
 

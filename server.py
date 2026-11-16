@@ -46,6 +46,7 @@ FORMATOS_PERMITIDOS = {
 IMAGENS_DO_PROJETO = {
     "exemplo_grafico.jpg",
     "VisionMind.jpg",
+    "VisionMind_conversa.jpg",
 }
 
 # Uploads mais antigos que isso são removidos

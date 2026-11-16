@@ -5,19 +5,29 @@ Assistente multimodal desenvolvido com **Python, LangChain e Google Gemini**, ca
 ---
 
 ## 📸 Interface
+
+### Tela Principal
+
 ![Tela Principal](imagem/VisionMind.jpg)
+
+### Conversa com análise de imagem
+
+O assistente responde perguntas sobre a imagem enviada e lembra do contexto nas mensagens seguintes:
+
+![Conversa com análise de imagem](imagem/VisionMind_conversa.jpg)
 
 ---
 
 ## 🚀 Funcionalidades
 
-- 🤖 Assistente conversacional
-- 🖼️ Análise de imagens com Gemini Vision
+- 🤖 Assistente conversacional com **memória da conversa** (últimas 6 trocas)
+- 🖼️ Análise de imagens com Gemini Vision, respondendo **perguntas específicas** sobre a imagem
 - 🧠 Explicação de conceitos e conteúdos
-- 🔧 Agente Orquestrador com LangChain
-- 📤 Upload de imagens pela interface
-- 🌐 Aplicação Web responsiva
-- 📡 Comunicação Frontend ↔ Backend
+- 🔧 Agente Orquestrador (ReAct) com LangChain, que escolhe a ferramenta certa para cada pergunta
+- 📤 Upload de imagens **JPG, PNG ou WEBP** (até 10 MB), com validação no servidor
+- 📋 Botão para copiar as respostas
+- 🌐 Aplicação Web responsiva (desktop e celular)
+- 💻 Modo terminal (`main.py`)
 
 ---
 
@@ -28,9 +38,9 @@ Usuário
    ↓
 Frontend (HTML + JavaScript)
    ↓
-Servidor Python
+Servidor Python (histórico por conversa)
    ↓
-Agente Orquestrador
+Agente Orquestrador (ReAct)
    ↓
  ┌─────────────────────────┐
  │ Ferramenta Explicadora  │
@@ -50,11 +60,11 @@ Google Gemini
 
 ### Backend
 
-- Python
+- Python 3.12
 - LangChain
 - Google Gemini
 - Pillow
-- HTTPServer
+- ThreadingHTTPServer (biblioteca padrão do Python)
 
 ### Frontend
 
@@ -64,12 +74,17 @@ Google Gemini
 
 ### IA
 
-- Gemini Flash
+- Gemini Flash (`gemini-3.1-flash-lite`)
 - Gemini Vision
 
 ---
 
 ## ⚙️ Instalação
+
+### Requisitos
+
+- Python 3.12 (versão testada)
+- Uma chave da API do Gemini, que pode ser gerada no [Google AI Studio](https://aistudio.google.com/apikey)
 
 ### Clonar repositório
 
@@ -104,11 +119,13 @@ pip install -r requirements.txt
 
 ## 🔑 Configuração
 
-Crie um arquivo `.env`:
+Crie um arquivo `.env` na raiz do projeto:
 
 ```env
 GEMINI_API_KEY="SUA_CHAVE"
 ```
+
+Para trocar o modelo usado, edite `my_models.py`.
 
 ---
 
@@ -133,11 +150,22 @@ python server.py 8080
 python server.py --host 0.0.0.0   # qualquer pessoa na rede poderá usar sua chave
 ```
 
+Imagens enviadas pela interface ficam em `imagem/` e são apagadas automaticamente depois de 24 horas.
+
 ### Terminal
 
 ```bash
 python main.py
 ```
+
+---
+
+## 💡 Exemplos de uso
+
+- Envie uma imagem e pergunte: *"Qual ano teve o maior valor neste gráfico?"*
+- Na mensagem seguinte, sem reenviar a imagem: *"E qual foi o menor?"*
+- *"Explique o que são redes neurais"*
+- *"Faça uma análise da imagem exemplo_grafico.jpg"*
 
 ---
 

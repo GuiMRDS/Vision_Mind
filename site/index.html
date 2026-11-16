@@ -63,15 +63,6 @@
         pointer-events: none;
       }
 
-      /* ── Curve separator (from design-system) ── */
-      .curve-separator {
-        background-image: url("data:image/svg+xml,%3Csvg width='20' height='60' viewBox='0 0 20 60' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M18 1C18 1 1 15 1 30C1 45 18 59 18 59' stroke='%23CBD5E1' stroke-width='0.5' stroke-linecap='round'/%3E%3C/svg%3E");
-        background-repeat: no-repeat;
-        background-position: center;
-        width: 20px;
-        height: 40px;
-      }
-
       /* ── Ping animation (from design-system) ── */
       @keyframes ping {
         75%,
@@ -145,13 +136,17 @@
       }
 
       /* ── Scrollbar ── */
-      #chat-messages::-webkit-scrollbar {
+      .scroll-fino {
+        scrollbar-width: thin;
+        scrollbar-color: #d4d4d8 transparent;
+      }
+      .scroll-fino::-webkit-scrollbar {
         width: 4px;
       }
-      #chat-messages::-webkit-scrollbar-track {
+      .scroll-fino::-webkit-scrollbar-track {
         background: transparent;
       }
-      #chat-messages::-webkit-scrollbar-thumb {
+      .scroll-fino::-webkit-scrollbar-thumb {
         background: #d4d4d8;
         border-radius: 4px;
       }
@@ -231,16 +226,6 @@
     <main
       class="glass-panel overflow-hidden flex flex-col w-full h-full xl:max-w-[1300px] xl:max-h-[900px] z-10 xl:border xl:border-white/50 xl:rounded-[2rem] xl:shadow-2xl relative"
     >
-      <!-- Vertical grid lines (from design-system) -->
-      <div
-        class="absolute inset-0 flex justify-between pointer-events-none z-0 px-6 md:px-10 xl:px-12 w-full h-full"
-      >
-        <div class="h-full w-[1px] bg-zinc-950/5"></div>
-        <div class="h-full w-[1px] bg-zinc-950/5 hidden md:block"></div>
-        <div class="h-full w-[1px] bg-zinc-950/5 hidden lg:block"></div>
-        <div class="h-full w-[1px] bg-zinc-950/5 hidden xl:block"></div>
-        <div class="h-full w-[1px] bg-zinc-950/5"></div>
-      </div>
 
       <!-- ════════════════════════════════════════════════
        HEADER
@@ -359,6 +344,7 @@
           <button
             onclick="limparChat()"
             title="Nova conversa"
+            aria-label="Nova conversa"
             class="flex items-center gap-2 text-xs font-medium text-zinc-700 bg-white border border-zinc-200 rounded-full h-9 px-3 sm:px-4 shadow-sm hover:bg-zinc-50 hover:border-zinc-300 transition-all"
           >
             <svg
@@ -384,7 +370,7 @@
         <!-- ── HERO ── -->
         <section
           id="hero"
-          class="px-6 md:px-10 xl:px-12 pt-6 pb-5 flex-shrink-0"
+          class="px-6 md:px-10 xl:px-12 pt-5 pb-5 md:pt-6 flex-shrink-0"
         >
           <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16">
             <!-- Left: title -->
@@ -393,14 +379,7 @@
               <div
                 class="inline-flex bg-white/60 w-max rounded-full mb-4 px-4 py-1.5 shadow-sm backdrop-blur-sm items-center gap-2 border border-white/40"
               >
-                <span class="relative flex h-2 w-2">
-                  <span
-                    class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"
-                  ></span>
-                  <span
-                    class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"
-                  ></span>
-                </span>
+                <span class="inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                 <span class="text-xs font-medium text-zinc-600 tracking-wide">
                   <span class="text-zinc-900">IA Multimodal</span> · Análise de
                   Imagens + Chat
@@ -412,7 +391,7 @@
                 class="leading-tight text-3xl md:text-4xl lg:text-5xl font-medium text-zinc-900 tracking-tighter mb-3"
               >
                 Vision<span
-                  class="text-transparent bg-clip-text bg-gradient-to-r from-zinc-400 to-zinc-200 font-light"
+                  class="text-transparent bg-clip-text bg-gradient-to-r from-zinc-500 to-zinc-400 font-light"
                   >Mind</span
                 >
               </h1>
@@ -442,7 +421,7 @@
                 <!-- Demo image -->
                 <img
                   src="imagem/exemplo_grafico.jpg"
-                  alt="Exemplo de análise"
+                  alt=""
                   class="w-full h-full object-cover absolute inset-0 opacity-50 group-hover:scale-105 transition-transform duration-700 ease-in-out"
                 />
                 <div
@@ -453,17 +432,10 @@
                   <div
                     class="flex items-center gap-2 bg-white/10 rounded-full px-3 py-1.5 w-fit backdrop-blur-sm border border-white/10"
                   >
-                    <span class="relative flex h-2 w-2">
-                      <span
-                        class="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"
-                      ></span>
-                      <span
-                        class="relative inline-flex rounded-full h-2 w-2 bg-orange-500"
-                      ></span>
-                    </span>
+                    <span class="inline-flex rounded-full h-2 w-2 bg-orange-400"></span>
                     <span
                       class="text-[10px] uppercase font-semibold text-white tracking-wide"
-                      >Análise Ativa</span
+                      >Exemplo de análise</span
                     >
                   </div>
                   <!-- Carousel of features -->
@@ -509,43 +481,6 @@
             </div>
           </div>
 
-          <!-- Stats row (from design-system footer stats) -->
-          <div class="flex flex-wrap gap-4 md:gap-8 mt-5 items-center">
-            <div class="flex items-center group cursor-default">
-              <div class="px-1 text-center">
-                <p
-                  class="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest mb-1 group-hover:text-zinc-600 transition-colors"
-                >
-                  Ferramentas
-                </p>
-                <p class="text-sm text-zinc-900 font-medium">2</p>
-              </div>
-              <div class="curve-separator opacity-60 ml-4"></div>
-            </div>
-            <div class="flex items-center group cursor-default">
-              <div class="px-1 text-center">
-                <p
-                  class="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest mb-1 group-hover:text-zinc-600 transition-colors"
-                >
-                  Modelo
-                </p>
-                <p id="hero-model" class="text-sm text-zinc-900 font-medium font-mono">
-                  —
-                </p>
-              </div>
-              <div class="curve-separator opacity-60 ml-4"></div>
-            </div>
-            <div class="flex items-center group cursor-default">
-              <div class="px-1 text-center">
-                <p
-                  class="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest mb-1 group-hover:text-zinc-600 transition-colors"
-                >
-                  Formatos
-                </p>
-                <p class="text-sm text-zinc-900 font-medium">JPG · PNG · WEBP</p>
-              </div>
-            </div>
-          </div>
         </section>
 
         <!-- Divider -->
@@ -559,7 +494,7 @@
         <div class="flex flex-1 overflow-hidden gap-0 min-h-0">
           <!-- ── SIDEBAR (image upload / example) ── -->
           <aside
-            class="hidden md:flex flex-col flex-shrink-0 w-64 xl:w-72 border-r border-zinc-950/5 px-5 py-6 gap-5 overflow-y-auto"
+            class="scroll-fino hidden md:flex flex-col flex-shrink-0 w-64 xl:w-72 border-r border-zinc-950/5 px-5 py-6 gap-5 overflow-y-auto"
           >
             <!-- Upload zone -->
             <div>
@@ -572,7 +507,16 @@
               <!-- Drop zone -->
               <div
                 id="drop-zone"
+                role="button"
+                tabindex="0"
+                aria-label="Selecionar imagem para análise"
                 onclick="document.getElementById('file-input').click()"
+                onkeydown="
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    this.click();
+                  }
+                "
                 ondragover="
                   event.preventDefault();
                   this.classList.add('drop-active');
@@ -593,10 +537,12 @@
                   <img
                     id="preview-img"
                     src=""
-                    alt="Preview"
+                    alt="Pré-visualização da imagem selecionada"
                     class="w-full rounded-lg object-cover shadow-sm border border-zinc-200 max-h-40"
                   />
                   <button
+                    type="button"
+                    aria-label="Remover imagem"
                     onclick="
                       event.stopPropagation();
                       limparImagem();
@@ -779,36 +725,6 @@
               </div>
             </div>
 
-            <!-- Spacer + model info -->
-            <div class="mt-auto pt-4 border-t border-zinc-950/5">
-              <div class="flex flex-col gap-2">
-                <div class="flex items-center justify-between">
-                  <span
-                    class="text-[10px] uppercase font-semibold text-zinc-400 tracking-widest"
-                    >Modelo</span
-                  >
-                  <span
-                    id="sidebar-model"
-                    class="text-xs font-mono text-zinc-600 truncate ml-2"
-                    >—</span
-                  >
-                </div>
-                <div class="flex items-center justify-between">
-                  <span
-                    class="text-[10px] uppercase font-semibold text-zinc-400 tracking-widest"
-                    >Agente</span
-                  >
-                  <span class="text-xs font-mono text-zinc-600">ReAct</span>
-                </div>
-                <div class="flex items-center justify-between">
-                  <span
-                    class="text-[10px] uppercase font-semibold text-zinc-400 tracking-widest"
-                    >Framework</span
-                  >
-                  <span class="text-xs font-mono text-zinc-600">LangChain</span>
-                </div>
-              </div>
-            </div>
           </aside>
 
           <!-- ── CHAT COLUMN ── -->
@@ -816,7 +732,7 @@
             <!-- Messages area -->
             <div
               id="chat-messages"
-              class="flex-1 overflow-y-auto px-6 md:px-8 py-6 flex flex-col gap-4 min-h-0"
+              class="scroll-fino flex-1 overflow-y-auto px-6 md:px-8 py-6 flex flex-col gap-4 min-h-0"
             >
               <!-- Welcome message -->
               <div id="welcome-card" class="msg-animate">
@@ -867,7 +783,7 @@
                         class="text-sm text-zinc-700 leading-relaxed font-medium mb-3"
                       >
                         Olá! Sou o <strong>VisionMind</strong>, seu assistente
-                        inteligente com visão computacional. 👁️
+                        inteligente com visão computacional.
                       </p>
                       <p class="text-sm text-zinc-500 leading-relaxed mb-4">
                         Posso analisar imagens em detalhes e responder suas
@@ -954,18 +870,21 @@
                 <div class="flex-1 relative">
                   <textarea
                     id="message-input"
-                    placeholder="Escreva sua mensagem ou peça uma análise de imagem…"
+                    placeholder="Pergunte algo ou envie uma imagem…"
+                    aria-label="Mensagem"
                     rows="1"
                     onkeydown="handleKeyDown(event)"
                     oninput="autoResize(this)"
-                    class="w-full bg-zinc-50 border border-zinc-200 rounded-2xl pl-5 pr-5 py-3.5 shadow-sm text-sm text-zinc-700 placeholder:text-zinc-400 outline-none focus:border-zinc-400 focus:shadow-md transition-all resize-none leading-relaxed"
-                    style="max-height: 140px; overflow-y: auto"
+                    class="scroll-fino w-full bg-zinc-50 border border-zinc-200 rounded-2xl pl-5 pr-5 py-3.5 shadow-sm text-sm text-zinc-700 placeholder:text-zinc-400 outline-none focus:border-zinc-400 focus:shadow-md transition-all resize-none leading-relaxed"
+                    style="max-height: 140px; overflow-y: hidden"
                   ></textarea>
                 </div>
 
                 <!-- Send button (primary — orange gradient from design-system) -->
                 <button
                   id="send-btn"
+                  type="button"
+                  aria-label="Enviar mensagem"
                   onclick="enviarMensagem()"
                   class="group flex-shrink-0 flex items-center justify-center w-11 h-11 rounded-full transition-all hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-zinc-900/20 disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none"
                   style="
@@ -997,25 +916,19 @@
                 </button>
               </div>
 
-              <!-- Footer hint -->
-              <div class="flex items-center justify-between mt-2.5">
-                <p class="text-[10px] text-zinc-400">
-                  <kbd
-                    class="font-mono bg-zinc-100 border border-zinc-200 rounded px-1"
-                    >Enter</kbd
-                  >
-                  envia ·
-                  <kbd
-                    class="font-mono bg-zinc-100 border border-zinc-200 rounded px-1"
-                    >Shift+Enter</kbd
-                  >
-                  nova linha
-                </p>
-                <div
-                  id="timing-display"
-                  class="hidden text-[10px] text-zinc-400 font-mono"
-                ></div>
-              </div>
+              <!-- Footer hint (só faz sentido com teclado físico) -->
+              <p class="hidden md:block text-[10px] text-zinc-400 mt-2.5">
+                <kbd
+                  class="font-mono bg-zinc-100 border border-zinc-200 rounded px-1"
+                  >Enter</kbd
+                >
+                envia ·
+                <kbd
+                  class="font-mono bg-zinc-100 border border-zinc-200 rounded px-1"
+                  >Shift+Enter</kbd
+                >
+                nova linha
+              </p>
             </div>
           </div>
         </div>
@@ -1067,9 +980,7 @@
           texto = ok ? "Agente Online" : "Agente Desconectado";
 
           if (d.modelo) {
-            for (const id of ["status-model", "hero-model", "sidebar-model"]) {
-              document.getElementById(id).textContent = d.modelo;
-            }
+            document.getElementById("status-model").textContent = d.modelo;
           }
         } catch {
           // mantém o estado "offline"
@@ -1094,6 +1005,13 @@
           .getElementById("hero-toggle-icon")
           .classList.toggle("rotate-180", !visivel);
       }
+
+      function telaPequena() {
+        return window.matchMedia("(max-width: 767px)").matches;
+      }
+
+      // No celular a apresentação começa recolhida para dar espaço ao chat
+      if (telaPequena()) definirHero(false);
 
       function alternarHero() {
         const hero = document.getElementById("hero");
@@ -1180,8 +1098,15 @@
 
       // ── Chat helpers ────────────────────────────────────
       function autoResize(el) {
+        const ALTURA_MAXIMA = 140;
+        // scrollHeight não inclui a borda; sem ela sobra uma barra de rolagem
+        const borda = el.offsetHeight - el.clientHeight;
+
         el.style.height = "auto";
-        el.style.height = Math.min(el.scrollHeight, 140) + "px";
+
+        const altura = el.scrollHeight + borda;
+        el.style.height = Math.min(altura, ALTURA_MAXIMA) + "px";
+        el.style.overflowY = altura > ALTURA_MAXIMA ? "auto" : "hidden";
       }
 
       function handleKeyDown(e) {
@@ -1362,7 +1287,7 @@
 
         // Clear input
         inp.value = "";
-        inp.style.height = "auto";
+        autoResize(inp);
 
         // Show user message
         appendUserMessage(pergunta, imagem?.base64 || null);
@@ -1395,11 +1320,6 @@
 
           if (data.success) {
             appendAIMessage(data.output, data.tempo, data.imagem_usada);
-            document.getElementById("timing-display").textContent =
-              `Tempo: ${data.tempo}s`;
-            document
-              .getElementById("timing-display")
-              .classList.remove("hidden");
           } else {
             appendErrorMessage(data.error || "Erro desconhecido.");
           }
@@ -1419,9 +1339,8 @@
         const container = document.getElementById("chat-messages");
         container.innerHTML = "";
         limparImagem();
-        definirHero(true);
+        definirHero(!telaPequena());
         sessaoId = novaSessao();
-        document.getElementById("timing-display").classList.add("hidden");
 
         // Re-add welcome card
         const el = document.createElement("div");
