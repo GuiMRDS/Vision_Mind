@@ -1029,6 +1029,13 @@
       // ── State ──────────────────────────────────────────
       let imagemAtual = null; // { nome, base64 }
       let carregando = false;
+      let sessaoId = novaSessao(); // identifica o histórico da conversa no servidor
+
+      function novaSessao() {
+        return window.crypto?.randomUUID
+          ? crypto.randomUUID()
+          : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+      }
 
       const FORMATOS_ACEITOS = ["image/jpeg", "image/png", "image/webp"];
       const TAMANHO_MAXIMO = 10 * 1024 * 1024;
@@ -1349,12 +1356,16 @@
         const pergunta =
           texto || (imagemAtual ? "Faça uma análise desta imagem" : "");
 
+        // A imagem vale só para esta mensagem; as seguintes usam o histórico
+        const imagem = imagemAtual;
+        limparImagem();
+
         // Clear input
         inp.value = "";
         inp.style.height = "auto";
 
         // Show user message
-        appendUserMessage(pergunta, imagemAtual?.base64 || null);
+        appendUserMessage(pergunta, imagem?.base64 || null);
 
         // Hide welcome card and hero to give room to the chat
         document.getElementById("welcome-card")?.remove();
@@ -1368,8 +1379,9 @@
         try {
           const payload = {
             pergunta,
-            nome_imagem: imagemAtual?.nome || "",
-            imagem: imagemAtual?.base64 || "",
+            sessao: sessaoId,
+            nome_imagem: imagem?.nome || "",
+            imagem: imagem?.base64 || "",
           };
 
           const r = await fetch("/api/chat", {
@@ -1408,6 +1420,7 @@
         container.innerHTML = "";
         limparImagem();
         definirHero(true);
+        sessaoId = novaSessao();
         document.getElementById("timing-display").classList.add("hidden");
 
         // Re-add welcome card

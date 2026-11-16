@@ -1,19 +1,15 @@
 import time
 
-from langchain.agents import AgentExecutor
 from agente.orquestrador import AgenteOrquestrador
+from my_helper import configurar_console
 
 
 def main():
+    configurar_console()
+
     agente = AgenteOrquestrador()
 
-    orquestrador = AgentExecutor(
-        agent=agente.agente,
-        tools=agente.tools,
-        verbose=True,
-    )
-
-    inicio = time.time()
+    historico = []
 
     print("""
     === Assistente IA ===
@@ -26,21 +22,27 @@ def main():
     """)
 
     while True:
-        pergunta = input("Você: ")
+        pergunta = input("Você: ").strip()
+
+        if not pergunta:
+            continue
 
         if pergunta.lower() in ["sair", "exit", "quit"]:
             print("Até logo!")
             break
 
         try:
-            resposta = orquestrador.invoke({
-                "input": pergunta
-            })
+            inicio = time.time()
+
+            resposta = agente.responder(pergunta, historico)
 
             fim = time.time()
 
+            historico.append((pergunta, resposta))
+            historico = historico[-6:]
+
             print("\nAssistente:")
-            print(resposta["output"])
+            print(resposta)
             print(f"\n⏱ Tempo: {fim - inicio:.2f}s")
 
         except Exception as e:

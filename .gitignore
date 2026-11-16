@@ -9,3 +9,6 @@ site/imagem/*
 
 *__pycache__/
 *venv*/
+
+# Configurações da IDE
+.idea/

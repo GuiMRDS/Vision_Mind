@@ -1,42 +1,34 @@
 from langchain.tools import BaseTool
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_core.language_models import BaseChatModel
 from langchain_core.output_parsers import StrOutputParser
 from langchain.prompts import PromptTemplate
 
+from ferramentas.entrada import ler_entrada
 
-from my_keys import GEMINI_API_KEY
-from my_models import GEMINI_FLASH
-import ast
 
 class FerramentaExplicadora(BaseTool):
     name : str = "Ferramenta Explicadora"
     description : str = """
-    Utilize esta ferramente sempre que for solicitado que você explique um conteudo para pessoas.
-    
-    # Entrada Requeridas
-    - 'tema' (str) : Tema principal informado na pergunta do usuario
+    Utilize esta ferramenta sempre que for solicitado que você explique um conteúdo para pessoas.
+
+    # Entrada (JSON)
+    - 'tema' (str) : solicitação completa do usuário
     """
 
     return_direct : bool = True
 
+    llm : BaseChatModel
+
     def _run(self, acao):
         # O agente pode mandar {"tema": "..."} ou apenas o texto puro
-        try:
-            dados = ast.literal_eval(acao)
-        except (ValueError, SyntaxError):
-            dados = acao
+        dados = ler_entrada(acao)
 
         if isinstance(dados, dict):
-            tema_parametro = dados.get("tema", "")
+            tema_parametro = str(dados.get("tema", ""))
         else:
-            tema_parametro = str(dados)
+            tema_parametro = dados
 
         tema_parametro = tema_parametro.strip()
-
-        llm = ChatGoogleGenerativeAI(
-            api_key=GEMINI_API_KEY,
-            model=GEMINI_FLASH,
-        )
 
         template_resposta = PromptTemplate(
         template="""
@@ -65,7 +57,7 @@ class FerramentaExplicadora(BaseTool):
 
         cadeia = (
             template_resposta
-            | llm
+            | self.llm
             | StrOutputParser()
         )
 

@@ -1,23 +1,11 @@
-import ast
 import os
 
 from langchain.tools import BaseTool
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_core.output_parsers import (
-    StrOutputParser,
-    JsonOutputParser,
-)
-from langchain.prompts import (
-    ChatPromptTemplate,
-    PromptTemplate,
-)
+from langchain_core.language_models import BaseChatModel
+from langchain_core.messages import HumanMessage, SystemMessage
 
-from my_keys import GEMINI_API_KEY
-from my_models import GEMINI_FLASH
 from my_helper import encode_image
-from agente.detalhes_imagem_modelo import (
-    DetalhesImagemModelo,
-)
+from ferramentas.entrada import ler_entrada
 
 
 BASE_DIR = os.path.dirname(
@@ -33,196 +21,112 @@ TIPOS_MIME = {
     ".webp": "image/webp",
 }
 
+PROMPT_SISTEMA = """
+Você é um analisador de imagens. Responda sempre em português do Brasil,
+em markdown, de forma clara e objetiva.
+
+- Se o usuário fez uma pergunta específica sobre a imagem, responda a
+  pergunta diretamente, usando os detalhes visíveis (números, textos,
+  cores, objetos) como evidência.
+- Se o usuário pediu uma análise geral, use o formato:
+
+### <título curto para a imagem>
+
+<descrição detalhada do conteúdo>
+
+**Rótulos:** <três termos-chave separados por vírgula>
+
+- Não invente informações que não estejam visíveis na imagem.
+"""
+
+PERGUNTA_PADRAO = "Faça uma análise geral da imagem."
+
+
+def _localizar_imagem(nome_imagem: str):
+    for pasta in (
+        os.path.join(BASE_DIR, "imagem"),
+        os.path.join(BASE_DIR, "site", "imagem"),
+    ):
+        caminho = os.path.join(pasta, nome_imagem)
+
+        if os.path.isfile(caminho):
+            return caminho
+
+    return None
+
+
+def _conteudo_para_texto(conteudo) -> str:
+    # Alguns modelos devolvem uma lista de partes em vez de string
+    if isinstance(conteudo, list):
+        return "".join(
+            parte.get("text", "") if isinstance(parte, dict) else str(parte)
+            for parte in conteudo
+        )
+
+    return str(conteudo)
+
 
 class FerramentaAnalisadoraImagem(BaseTool):
 
     name: str = "Ferramenta Analisadora Imagem"
 
     description: str = """
-    Utilize esta ferramenta sempre que for solicitada
-    uma análise de imagem.
+    Utilize esta ferramenta sempre que for solicitada uma análise de
+    imagem ou uma pergunta sobre o conteúdo de uma imagem.
 
-    Entradas:
+    Entrada (JSON):
 
-    - nome_imagem (str)
-
-    Exemplo:
-    teste.jpg
+    - nome_imagem (str): nome do arquivo, ex.: teste.jpg
+    - pergunta (str): o que o usuário quer saber sobre a imagem
     """
 
-    return_direct: bool = False
+    # A resposta já sai pronta para o usuário
+    return_direct: bool = True
+
+    llm: BaseChatModel
 
     def _run(self, acao):
 
-        try:
-            dados = ast.literal_eval(acao)
+        dados = ler_entrada(acao)
 
-            if isinstance(dados, dict):
-                nome_imagem = dados["nome_imagem"]
-            else:
-                nome_imagem = acao
+        if isinstance(dados, dict):
+            nome_imagem = str(dados.get("nome_imagem", ""))
+            pergunta = str(dados.get("pergunta", ""))
+        else:
+            nome_imagem = dados
+            pergunta = ""
 
-        except Exception:
-            nome_imagem = acao
+        nome_imagem = os.path.basename(nome_imagem.strip().strip("'\""))
+        pergunta = pergunta.strip() or PERGUNTA_PADRAO
 
-        nome_imagem = os.path.basename(
-            str(nome_imagem).strip().strip("'\"")
-        )
-
-        caminhos_possiveis = [
-            os.path.join(
-                BASE_DIR,
-                "imagem",
-                nome_imagem,
-            ),
-            os.path.join(
-                BASE_DIR,
-                "site",
-                "imagem",
-                nome_imagem,
-            ),
-        ]
-
-        caminho_arquivo = None
-
-        for caminho in caminhos_possiveis:
-            if os.path.exists(caminho):
-                caminho_arquivo = caminho
-                break
+        caminho_arquivo = _localizar_imagem(nome_imagem) if nome_imagem else None
 
         if caminho_arquivo is None:
-            return f"Erro: imagem não encontrada: {nome_imagem}"
-
-        imagem = encode_image(caminho_arquivo)
+            return f"Erro: imagem não encontrada: {nome_imagem or '(sem nome)'}"
 
         extensao = os.path.splitext(caminho_arquivo)[1].lower()
         mime_type = TIPOS_MIME.get(extensao, "image/jpeg")
 
-        llm = ChatGoogleGenerativeAI(
-            api_key=GEMINI_API_KEY,
-            model=GEMINI_FLASH,
-        )
+        imagem = encode_image(caminho_arquivo)
 
-        template_analisador = (
-            ChatPromptTemplate.from_messages(
-                [
-                    (
-                        "system",
-                        """
-                        Assuma que você é um analisador
-                        de imagens.
-
-                        Sua tarefa consiste em
-                        analisar uma imagem e extrair
-                        informações importantes.
-
-                        FORMATO:
-
-                        Descrição da Imagem:
-                        ...
-
-                        Rótulos:
-                        ...
-                        """,
-                    ),
-                    (
-                        "user",
-                        [
-                            {
-                                "type": "text",
-                                "text": (
-                                    "Descreva a imagem."
-                                ),
-                            },
-                            {
-                                "type": "image_url",
-                                "image_url": {
-                                    "url":
-                                    (
-                                        "data:{mime_type};base64,"
-                                        "{imagem_informada}"
-                                    )
-                                },
-                            },
-                        ],
-                    ),
+        mensagens = [
+            SystemMessage(content=PROMPT_SISTEMA),
+            HumanMessage(
+                content=[
+                    {
+                        "type": "text",
+                        "text": pergunta,
+                    },
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": f"data:{mime_type};base64,{imagem}",
+                        },
+                    },
                 ]
-            )
-        )
+            ),
+        ]
 
-        cadeia_analise_imagem = (
-            template_analisador
-            | llm
-            | StrOutputParser()
-        )
+        resposta = self.llm.invoke(mensagens)
 
-        parser_json_imagem = JsonOutputParser(
-            pydantic_object=
-            DetalhesImagemModelo
-        )
-
-        template_resposta = PromptTemplate(
-            template="""
-            Gere um resumo utilizando
-            linguagem clara e objetiva.
-
-            Resultado da imagem:
-
-            {resposta_cadeia_analise_imagem}
-
-            FORMATO:
-
-            {formato_saida}
-            """,
-            input_variables=[
-                "resposta_cadeia_analise_imagem"
-            ],
-            partial_variables={
-                "formato_saida":
-                parser_json_imagem
-                .get_format_instructions()
-            },
-        )
-
-        cadeia_resumo = (
-            template_resposta
-            | llm
-            | parser_json_imagem
-        )
-
-        cadeia_completa = (
-            cadeia_analise_imagem
-            | cadeia_resumo
-        )
-
-        resposta = cadeia_completa.invoke(
-            {
-                "imagem_informada": imagem,
-                "mime_type": mime_type,
-            }
-        )
-
-        return _formatar_resposta(resposta)
-
-
-def _formatar_resposta(resposta) -> str:
-    """
-    Converte o JSON {titulo, descricao, rotulos} em
-    texto markdown, já que o agente espera uma string.
-    """
-
-    if not isinstance(resposta, dict):
-        return str(resposta)
-
-    titulo = resposta.get("titulo", "Análise da imagem")
-    descricao = resposta.get("descricao", "")
-    rotulos = resposta.get("rotulos") or []
-
-    texto = f"### {titulo}\n\n{descricao}"
-
-    if rotulos:
-        texto += "\n\n**Rótulos:** " + ", ".join(
-            str(rotulo) for rotulo in rotulos
-        )
-
-    return texto
+        return _conteudo_para_texto(resposta.content)

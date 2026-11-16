@@ -74,8 +74,8 @@ Google Gemini
 ### Clonar repositório
 
 ```bash
-git clone https://github.com/SEU-USUARIO/VisionMind.git
-cd VisionMind
+git clone https://github.com/GuiMRDS/Vision_Mind.git
+cd Vision_Mind
 ```
 
 ### Criar ambiente virtual
@@ -108,7 +108,6 @@ Crie um arquivo `.env`:
 
 ```env
 GEMINI_API_KEY="SUA_CHAVE"
-MARITACA_API_KEY="SUA_CHAVE"
 ```
 
 ---
@@ -127,10 +126,34 @@ Acesse:
 http://localhost:8000
 ```
 
+Por padrão o servidor só aceita conexões do próprio computador. Para usar outra porta ou abrir na rede local:
+
+```bash
+python server.py 8080
+python server.py --host 0.0.0.0   # qualquer pessoa na rede poderá usar sua chave
+```
+
 ### Terminal
 
 ```bash
 python main.py
+```
+
+---
+
+## 🧪 Testes
+
+Testes automatizados (não acessam a internet nem gastam cota da API):
+
+```bash
+python -m unittest discover -s testes -t . -p "test_*.py"
+```
+
+Scripts manuais que chamam o Gemini de verdade:
+
+```bash
+python -m testes.listar_modelos
+python -m testes.teste_modelos
 ```
 
 ---
